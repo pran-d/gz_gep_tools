@@ -40,6 +40,9 @@ class JointStateInterface {
   
   /// List of joints
   std::vector<std::string> list_of_joints_;
+
+  /// Map joints to index in list
+  std::map<std::string, std::size_t> map_name_2_indx_;
   
   /// Vector of string describing the topics to command forces on actuators.
   std::vector<std::string> cmd_force_topics_;

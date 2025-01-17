@@ -22,19 +22,26 @@ void JointStateInterface::SetListOfJoints(
 {
   list_of_joints_.clear();
   list_of_joints_ = a_list_of_joints;
-  
+
   cmd_force_topics_.clear();
   gz_pub_cmd_forces_.clear();
 
+  unsigned int idx=0;
   for (auto jointItr = a_list_of_joints.begin();
        jointItr != a_list_of_joints.end();
        jointItr++) {
+    /// Build a new string
     std::string a_new_cmd_force = prefix_model_root_ + std::string("joint/") +
         *jointItr + std::string("/cmd_force");
     cmd_force_topics_.push_back(a_new_cmd_force);
+    /// Build advertise
     gz::transport::Node::Publisher a_gz_pub_cmd_force =
         node_.Advertise<gz::msgs::Double>(a_new_cmd_force);
     gz_pub_cmd_forces_.push_back(a_gz_pub_cmd_force);
+
+    // Set map relationship between name and idx.
+    map_name_2_indx_[*jointItr] = idx;
+    idx++;
   }
   positions_.clear();
   positions_.resize(a_list_of_joints.size());
@@ -49,29 +56,30 @@ void JointStateInterface::CallbackJointState(
   for (auto jointItr = a_gz_model_msg.joint().begin();
        jointItr != a_gz_model_msg.joint().end();
        jointItr++) {
-    idx_joints++;
 
     const ::gz::msgs::Axis &axis1 = jointItr->axis1();
 
+    long unsigned int local_joint_idx = map_name_2_indx_[jointItr->name()];
 
     if (positions_.size()!=0)
-      positions_[idx_joints] = axis1.position();
+      positions_[local_joint_idx] = axis1.position();
     if (velocities_.size()!=0)
-      velocities_[idx_joints] = axis1.velocity();
+      velocities_[local_joint_idx] = axis1.velocity();
 
+    idx_joints++;
   }
-  
+
 }
 
 bool JointStateInterface::SetCmd( const std::vector<double> &a_cmd_vec_d)
 {
   if (a_cmd_vec_d.size()!=gz_pub_cmd_forces_.size())
     return false;
-  
+
   for (unsigned int i = 0; i < a_cmd_vec_d.size(); i++) {
     gz::msgs::Double msg;
     msg.set_data(a_cmd_vec_d[i]);
-    
+
     if (!gz_pub_cmd_forces_[i].Publish(msg)){
       std::cerr << "Unable to publish on "
                << cmd_force_topics_[i]
@@ -89,7 +97,7 @@ void JointStateInterface::GetPosVel(std::vector<double> &pos_vecd,
       idx++)
   {
     pos_vecd[idx] = positions_[idx];
-    vel_vecd[idx] = velocities_[idx];    
+    vel_vecd[idx] = velocities_[idx];
   }
 }
 };

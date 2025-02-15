@@ -11,6 +11,8 @@ set(CMAKE_VERBOSE_MAKEFILE TRUE)
 # Find the Gazebo Transport library
 find_package(gz-transport13 QUIET REQUIRED OPTIONAL_COMPONENTS log)
 set(GZ_TRANSPORT_VER ${gz-transport13_VERSION_MAJOR})
+find_package(gz-sim8 QUIET REQUIRED OPTIONAL_COMPONENTS log)
+set(GZ_SIM_VER ${gz-sim8_VERSION_MAJOR})
 
 add_library(gz_transport_hw_interface SHARED
   src/joint_state_interface.cc
@@ -19,7 +21,9 @@ add_library(gz_transport_hw_interface SHARED
 target_include_directories(gz_transport_hw_interface PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>    
   $<INSTALL_INTERFACE:include>)
-target_link_libraries(gz_transport_hw_interface gz-transport${GZ_TRANSPORT_VER}::core)
+target_link_libraries(gz_transport_hw_interface
+  gz-transport${GZ_TRANSPORT_VER}::core
+  gz-sim${GZ_SIM_VER}::core)
 
 
 add_executable(control_loop ./tools/control_loop.cc)

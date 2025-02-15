@@ -1,3 +1,4 @@
+#pragma once
 /// Standard includes
 #include <vector>
 #include <string>
@@ -8,13 +9,40 @@
 
 namespace gz_transport_hw_tools {
 
+class LastState {
+ public:
+  /// Time
+  int64_t time_sec_;
+  int64_t time_nsec_;
+
+  /// Position
+  std::vector<double> positions_;
+
+  /// Velocity
+  std::vector<double> velocities_;
+
+  void resize(std::size_t asize);
+
+  std::mutex lock_state_access_;
+  LastState();
+};
+
+class JointValues {
+  double pos_mes;
+  double vel_mes;
+  double force_ctrl;
+  std::string cmd_force_topic;
+  gz::transport::Node::Publisher;
+};
+
 /// This class handles the interface to the joints and the sensors
 /// of a robot simulated by Gazebo (Harmonic)
 class JointStateInterface {
  public:
   /// Constructor
   JointStateInterface(std::string &a_prefix_model_root,
-                      std::string &a_prefix_world);
+                      std::string &a_prefix_world,
+                      bool debug_level=false);
   /// Destructor
   ~JointStateInterface();
 
@@ -24,26 +52,27 @@ class JointStateInterface {
 
   bool SetCmd(const std::vector<double> &cmd_vec);
 
-  void GetPosVel(std::vector<double> &pos_vecd,
-                 std::vector<double> &vel_vecd);
-  
+  bool GetPosVel(std::vector<double> &pos_vecd,
+                 std::vector<double> &vel_vecd,
+                 double &time);
+
   private:
 
   /// Callback function for state model update.
   void CallbackJointState(const gz::msgs::Model &a_gz_model_msg);
-  
+
   /// Root of the prefix model
   std::string prefix_model_root_;
 
   /// Prefix world
   std::string prefix_world_;
-  
+
   /// List of joints
   std::vector<std::string> list_of_joints_;
 
   /// Map joints to index in list
   std::map<std::string, std::size_t> map_name_2_indx_;
-  
+
   /// Vector of string describing the topics to command forces on actuators.
   std::vector<std::string> cmd_force_topics_;
 
@@ -56,11 +85,10 @@ class JointStateInterface {
   /// GZ node
   gz::transport::Node node_;
 
-  /// Position
-  std::vector<double> positions_;
+  /// Last state of the robot
+  LastState last_state_;
 
-  /// Velocity
-  std::vector<double> velocities_;
+  bool debug_level_;
 };
 
 }

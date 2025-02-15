@@ -42,7 +42,7 @@ void signal_handler(int _signal)
 }
 
 //////////////////////////////////////////////////
-int main(int argc, char **argv)
+int main(int , char **)
 {
   using namespace std::chrono_literals;
 

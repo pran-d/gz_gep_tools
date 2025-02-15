@@ -35,8 +35,8 @@ ControlOverGz::ControlOverGz(std::string &world_prefix, bool debug_level)
 void ControlOverGz::CallbackClock(const gz::msgs::Clock &a_gz_time_msg) {
   if (a_gz_time_msg.has_sim())
   {
-    gz_sim_time_ = a_gz_time_msg.sim().sec() +
-        1e-9*a_gz_time_msg.sim().nsec();
+    gz_sim_time_ = (double)a_gz_time_msg.sim().sec() +
+        1e-9*(double)a_gz_time_msg.sim().nsec();
     if (debug_level_)
       std::cerr << "ControlOverGz::CallbackClock: Time: "  << a_gz_time_msg.sim().sec()
                 << " "  <<  a_gz_time_msg.sim().nsec()

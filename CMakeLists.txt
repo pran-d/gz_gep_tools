@@ -1,10 +1,15 @@
-
 cmake_minimum_required(VERSION 3.22.1 FATAL_ERROR)
 
 set(CMAKE_CXX_STANDARD 17)
 
-project(gz-gep-tools)
+# These variables have to be defined before running SETUP_PROJECT
+set(PROJECT_NAME gz_gep_tools)
+set(PROJECT_DESCRIPTION "Tools to control Gazebo through C++")
+set(PROJECT_URL http://github.com/gepetto/gz_gep_tools)
 
+include(cmake/base.cmake)
+
+project(${PROJECT_NAME} CXX)
 
 set(CMAKE_VERBOSE_MAKEFILE TRUE)
 

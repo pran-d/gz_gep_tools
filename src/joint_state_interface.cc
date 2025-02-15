@@ -135,7 +135,7 @@ bool JointStateInterface::GetPosVel(std::vector<double> &pos_vecd,
       return false;
 
   std::lock_guard(last_state_.lock_state_access_);
-  time=last_state_.time_sec_ + 1e-9*last_state_.time_nsec_;
+  time=(double)last_state_.time_sec_ + 1e-9*(double)last_state_.time_nsec_;
   for(std::vector<double>::size_type idx=0;
       idx < pos_vecd.size();
       idx++)

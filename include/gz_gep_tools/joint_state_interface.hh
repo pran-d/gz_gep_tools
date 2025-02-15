@@ -32,7 +32,7 @@ class JointValues {
   double vel_mes;
   double force_ctrl;
   std::string cmd_force_topic;
-  gz::transport::Node::Publisher;
+  gz::transport::Node::Publisher gz_pub_cmd_force;
 };
 
 /// This class handles the interface to the joints and the sensors

@@ -1,3 +1,4 @@
+#pragma once
 /// Standard includes
 #include <gz/sim/EntityComponentManager.hh>
 #include <vector>
@@ -6,6 +7,8 @@
 /// GZ includes
 #include <gz/msgs.hh>
 #include <gz/transport.hh>
+
+#include "joint_state_interface.hh"
 
 namespace gz_transport_hw_tools {
 
@@ -31,7 +34,7 @@ class ControlOverGz {
   double GetSimTime();
 
   /// Send World Control state to Init ECM.
-  bool SendWorldControlStateToInitECM(std::map<std::string, double> &named_pos_des_d);
+  bool SendWorldControlStateToInitECM(const RobotCtrlJointInfos &rbt_ctrl_joint_infos);
 
   /// Initialization of the ECM by reading the world control state
   bool ReadWorldStateToInitECM();
@@ -39,6 +42,9 @@ class ControlOverGz {
   /// Display joint values
   void DisplayJointValues();
 
+  /// Display link values
+  void DisplayLinkValues();
+  
  protected:
 
 

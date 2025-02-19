@@ -22,6 +22,7 @@ set(GZ_SIM_VER ${gz-sim8_VERSION_MAJOR})
 add_library(gz_transport_hw_interface SHARED
   src/joint_state_interface.cc
   src/control_over_gz.cc
+  src/perception_action_loop.cc
 )
 target_include_directories(gz_transport_hw_interface PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>    

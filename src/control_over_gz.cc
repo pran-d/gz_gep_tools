@@ -1,3 +1,4 @@
+#include "gz_gep_tools/joint_state_interface.hh"
 #include <cmath>
 #include <cstdint>
 #include <cstring>
@@ -9,7 +10,9 @@
 
 #include <gz/sim/EntityComponentManager.hh>
 #include <gz/sim/components/Joint.hh>
+#include <gz/sim/components/Link.hh>
 #include <gz/sim/Joint.hh>
+#include <gz/sim/Link.hh>
 
 namespace gz_transport_hw_tools {
 
@@ -146,6 +149,22 @@ bool ControlOverGz::ReadWorldStateToInitECM()
   return result;
 }
 
+void ControlOverGz::DisplayLinkValues()
+{
+  auto entities = Robot_ECM_.EntitiesByComponents( gz::sim::components::Link());
+  
+  for (auto it_entity = entities.begin();
+       it_entity != entities.end();
+       it_entity++)
+  {
+    gz::sim::Link a_link(*it_entity);
+    std::string default_link_name("noname");
+    std::cout << "Link name:" << a_link.Name(Robot_ECM_).value_or(default_link_name);
+    std::vector<gz::sim::Entity> a_link_collisions = a_link.Collisions(Robot_ECM_);
+    std::cout << "Collisions:" << a_link_collisions.size() << std::endl;
+  }
+}
+
 void ControlOverGz::DisplayJointValues()
 {
   auto entities = Robot_ECM_.EntitiesByComponents( gz::sim::components::Joint());
@@ -171,7 +190,7 @@ void ControlOverGz::DisplayJointValues()
   }
 }
 
-bool ControlOverGz::SendWorldControlStateToInitECM(std::map<std::string, double> &named_pos_d)
+bool ControlOverGz::SendWorldControlStateToInitECM(const RobotCtrlJointInfos &rbt_ctrl_joint_infos)
 {
   gz::msgs::WorldControlState req_world_ctrl_state;
   gz::msgs::SerializedState * req_serialized_state;
@@ -192,9 +211,13 @@ bool ControlOverGz::SendWorldControlStateToInitECM(std::map<std::string, double>
     //    std::cout << "Joint name:" << jointName;
 
     std::vector<double> one_vecd;
-    one_vecd.push_back(named_pos_d[jointName]);
-    //    std::cout << " " << one_vecd[0] << std::endl;
-    aJoint.ResetPosition(Robot_ECM_,one_vecd);
+    auto a_ctrl_joint_info = rbt_ctrl_joint_infos.find(jointName);
+    if (a_ctrl_joint_info != rbt_ctrl_joint_infos.end())
+    {
+      one_vecd.push_back(a_ctrl_joint_info->second.pos_des);
+      //    std::cout << " " << one_vecd[0] << std::endl;
+      aJoint.ResetPosition(Robot_ECM_,one_vecd);
+    }
   }
 
   /// Create the serialized state.

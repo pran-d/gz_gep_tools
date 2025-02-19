@@ -1,25 +1,43 @@
+#include <fstream>
+#include <iostream>
+
 #include <gz_gep_tools/joint_state_interface.hh>
 #include <gz/msgs.hh>
 #include <gz/transport.hh>
 
 namespace gz_transport_hw_tools {
 
-LastState::LastState() :
+bool SavePos(const RobotCtrlJointInfos &a_rbt_ctrl_joint_infos,
+             const std::string &afilename) 
+{
+  std::ofstream ofs_position_robot(afilename.c_str(), std::ios::app);
+  for(auto it_joint_info = a_rbt_ctrl_joint_infos.begin();
+      it_joint_info != a_rbt_ctrl_joint_infos.end();
+      it_joint_info++)
+    ofs_position_robot << it_joint_info->second.pos_mes << " ";
+  ofs_position_robot << std::endl;
+  ofs_position_robot.close();
+  return true;
+}
+
+bool SaveCmd(const RobotCtrlJointInfos &a_rbt_ctrl_joint_infos,
+             const std::string &afilename) 
+{
+  std::ofstream ofs_position_robot(afilename.c_str(), std::ios::app);
+  for(auto it_joint_info = a_rbt_ctrl_joint_infos.begin();
+      it_joint_info != a_rbt_ctrl_joint_infos.end();
+      it_joint_info++)
+    ofs_position_robot << it_joint_info->second.cmd << " ";
+  ofs_position_robot << std::endl;
+  ofs_position_robot.close();
+  return true;
+}
+
+RobotJoints::RobotJoints() :
     time_sec_(0),
     time_nsec_(0)
 {}
 
-void LastState::resize(size_t asize) {
-  positions_.clear();
-  positions_.resize(asize);
-  velocities_.clear();
-  velocities_.resize(asize);
-  for(unsigned i=0;i<positions_.size();i++)
-  {
-    positions_[i]  = 0.0;
-    velocities_[i] = 0.0;
-  }
-}
 
 JointStateInterface::JointStateInterface(std::string &a_prefix_model_root,
                                          std::string &a_prefix_world,
@@ -37,33 +55,24 @@ JointStateInterface::JointStateInterface(std::string &a_prefix_model_root,
 JointStateInterface::~JointStateInterface() {}
 
 void JointStateInterface::SetListOfJoints(
-    const std::vector<std::string> &a_list_of_joints)
+    const RobotCtrlJointInfos &rbt_ctrl_joint_infos)
 {
-  list_of_joints_.clear();
-  list_of_joints_ = a_list_of_joints;
+  robot_joints_.dict_joint_values.clear();
 
-  cmd_force_topics_.clear();
-  gz_pub_cmd_forces_.clear();
-
-  unsigned int idx=0;
-  for (auto jointItr = a_list_of_joints.begin();
-       jointItr != a_list_of_joints.end();
+  for (auto jointItr = rbt_ctrl_joint_infos.begin();
+       jointItr != rbt_ctrl_joint_infos.end();
        jointItr++) {
     /// Build a new string
     std::string a_new_cmd_force = prefix_model_root_ + std::string("joint/") +
-        *jointItr + std::string("/cmd_force");
-    cmd_force_topics_.push_back(a_new_cmd_force);
+        jointItr->first + std::string("/cmd_force");
+    
     /// Build advertise
-    gz::transport::Node::Publisher a_gz_pub_cmd_force =
+    robot_joints_.dict_joint_values[jointItr->first].gz_pub_cmd_force = 
         node_.Advertise<gz::msgs::Double>(a_new_cmd_force);
-    gz_pub_cmd_forces_.push_back(a_gz_pub_cmd_force);
-
-    // Set map relationship between name and idx.
-    map_name_2_indx_[*jointItr] = idx;
-    idx++;
+    
+    robot_joints_.dict_joint_values[jointItr->first].cmd_force_topic = a_new_cmd_force;    
+    
   }
-
-  last_state_.resize(a_list_of_joints.size());
 
 }
 
@@ -71,82 +80,98 @@ void JointStateInterface::CallbackJointState(
     const gz::msgs::Model&a_gz_model_msg
     ) {
 
-  std::lock_guard(last_state_.lock_state_access_);
-  unsigned int idx_joints=0;
+  std::lock_guard(robot_joints_.lock_state_access_);
+
   for (auto jointItr = a_gz_model_msg.joint().begin();
        jointItr != a_gz_model_msg.joint().end();
        jointItr++) {
 
-
     const ::gz::msgs::Axis &axis1 = jointItr->axis1();
 
-    long unsigned int local_joint_idx = map_name_2_indx_[jointItr->name()];
+    robot_joints_.dict_joint_values[jointItr->name()].pos_mes = axis1.position();
+    robot_joints_.dict_joint_values[jointItr->name()].vel_mes = axis1.velocity();
 
-    if (last_state_.positions_.size()!=0)
-      last_state_.positions_[local_joint_idx] = axis1.position();
-    if (last_state_.velocities_.size()!=0)
-      last_state_.velocities_[local_joint_idx] = axis1.velocity();
-
-    idx_joints++;
   }
 
   if (debug_level_)
   {
     std::cerr << "JointStateInterface::CallbackJointState: time: "
-              << " " << last_state_.time_sec_
-              << " " << last_state_.time_nsec_;
-    if (last_state_.positions_.size()>1)
-      std::cerr << " " << last_state_.positions_[1];
+              << " " << robot_joints_.time_sec_
+              << " " << robot_joints_.time_nsec_;
+    if (robot_joints_.dict_joint_values["arm_left_1_joint"].pos_mes)
+      std::cerr << " " << robot_joints_.dict_joint_values["arm_left_1_joint"].pos_mes;
 
     std::cerr << std::endl;
   }
-  last_state_.time_sec_ = a_gz_model_msg.header().stamp().sec();
-  last_state_.time_nsec_ = a_gz_model_msg.header().stamp().nsec();
+  robot_joints_.time_sec_ = a_gz_model_msg.header().stamp().sec();
+  robot_joints_.time_nsec_ = a_gz_model_msg.header().stamp().nsec();
 
 
 }
 
-bool JointStateInterface::SetCmd( const std::vector<double> &a_cmd_vec_d)
+bool JointStateInterface::SetCmd( const RobotCtrlJointInfos &rbt_ctrl_joint_infos)
 {
-  if (a_cmd_vec_d.size()!=gz_pub_cmd_forces_.size())
+  if (rbt_ctrl_joint_infos.size()>robot_joints_.dict_joint_values.size())
+  {
+    std::cerr << "rbt_ctrl_joint_infos.size(): "
+              << rbt_ctrl_joint_infos.size()
+              << " robot_joints_.dict_joint_values.size()"
+              << robot_joints_.dict_joint_values.size()
+              << std::endl;
     return false;
-
-  for (unsigned int i = 0; i < a_cmd_vec_d.size(); i++)
+  }
+  // Iterate over the cmd map.
+  for (auto cmd_it = rbt_ctrl_joint_infos.begin();
+       cmd_it != rbt_ctrl_joint_infos.end();
+       cmd_it++)    
   {
     gz::msgs::Double msg;
-    msg.set_data(a_cmd_vec_d[i]);
+    msg.set_data(cmd_it->second.cmd);
 
-    if (!gz_pub_cmd_forces_[i].Publish(msg)){
+    auto it_robot_joint_value = robot_joints_.dict_joint_values.find(cmd_it->first);
+    // If the joint is not found go to the next iteration.
+    if (it_robot_joint_value == robot_joints_.dict_joint_values.end())
+      continue;
+    
+    if (!it_robot_joint_value->second.gz_pub_cmd_force.Publish(msg)){
       std::cerr << "Unable to publish on "
-               << cmd_force_topics_[i]
-               << std::endl;
-      return false;
+                << it_robot_joint_value->second.cmd_force_topic
+                << std::endl;
+      continue;
+    } 
+    if (debug_level_)
+    {
+      std::cout << " Publish " << cmd_it->second.cmd << " on "
+                << robot_joints_.dict_joint_values[cmd_it->first].cmd_force_topic
+                << std::endl;
     }
   }
   return true;
 }
 
-bool JointStateInterface::GetPosVel(std::vector<double> &pos_vecd,
-                                    std::vector<double> &vel_vecd,
+bool JointStateInterface::GetPosVel(RobotCtrlJointInfos &rbt_ctrl_joint_infos,
                                     double &time)
 {
-  if ((pos_vecd.size()!= last_state_.positions_.size()) ||
-      (vel_vecd.size()!= last_state_.velocities_.size()))
-      return false;
-
-  std::lock_guard(last_state_.lock_state_access_);
-  time=(double)last_state_.time_sec_ + 1e-9*(double)last_state_.time_nsec_;
-  for(std::vector<double>::size_type idx=0;
-      idx < pos_vecd.size();
-      idx++)
+  if (rbt_ctrl_joint_infos.size()> robot_joints_.dict_joint_values.size())
   {
-    pos_vecd[idx] = last_state_.positions_[idx];
-    vel_vecd[idx] = last_state_.velocities_[idx];
+    std::cerr << "rbt_ctrl_joint_infos.size(): " << rbt_ctrl_joint_infos.size()
+              << " robot_joints_.dict_joint_values.size():"  << robot_joints_.dict_joint_values.size()
+              << std::endl;
+      return false;
+  }
+  std::lock_guard(robot_joints_.lock_state_access_);
+  time=(double)robot_joints_.time_sec_ + 1e-9*(double)robot_joints_.time_nsec_;
+  for (auto joint_it = rbt_ctrl_joint_infos.begin();
+       joint_it != rbt_ctrl_joint_infos.end();
+       joint_it++)
+  {
+    joint_it->second.pos_mes = robot_joints_.dict_joint_values[joint_it->first].pos_mes;
+    joint_it->second.vel_des = robot_joints_.dict_joint_values[joint_it->first].vel_mes;
   }
   if (debug_level_)
     std::cerr << "JointStateInterface::GetPosVel: time: "
               << time << " "
-              << pos_vecd[1] << " "
+              << rbt_ctrl_joint_infos["arm_left_1_joint"].pos_mes << " "
               << std::endl;
 
   return true;

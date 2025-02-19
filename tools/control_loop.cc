@@ -22,262 +22,129 @@
 #include <iostream>
 #include <string>
 #include <thread>
+#include <fstream>
+#include <iostream>
+#include <string>
+
 #include <gz/msgs.hh>
 #include <gz/transport.hh>
 
 #include <gz_gep_tools/gz_gep_tools.hh>
-
-/// \brief Flag used to break the publisher loop and terminate the program.
-static std::atomic<bool> g_terminatePub(false);
+#include <gz_gep_tools/perception_action_loop.hh>
 
 
 //////////////////////////////////////////////////
-/// \brief Function callback executed when a SIGINT or SIGTERM signals are
-/// captured. This is used to break the infinite loop that publishes messages
-/// and exit the program smoothly.
-void signal_handler(int _signal)
+int main(int argc, char **argv)
 {
-  if (_signal == SIGINT || _signal == SIGTERM)
-    g_terminatePub = true;
-}
+  // Dealing with the arguments.
+  int choice = 0;
 
-//////////////////////////////////////////////////
-int main(int , char **)
-{
-  using namespace std::chrono_literals;
-
-  // Install a signal handler for SIGINT and SIGTERM.
-  std::signal(SIGINT,  signal_handler);
-  std::signal(SIGTERM, signal_handler);
+  if (argc!=2) {
+    std::cerr << argv[0] << " h|t" << std::endl
+              << " h : for the H1 robot (default)" << std::endl
+              << " t : for the TALOS robot" << std::endl;
+    return -1;
+  }
+  else if (std::string(argv[1])==std::string("t"))
+    choice = 1;
 
   // Create a transport node and advertise a topic.
   gz::transport::Node node;
-  std::vector<std::string> talos_list_of_joints {
-    "arm_left_1_joint",
-    "arm_left_2_joint",
-    "arm_left_3_joint",
-    "arm_left_4_joint",
-    "arm_left_5_joint",
-    "arm_left_6_joint",
-    "arm_left_7_joint",
-    "arm_right_1_joint",
-    "arm_right_2_joint",
-    "arm_right_3_joint",
-    "arm_right_4_joint",
-    "arm_right_5_joint",
-    "arm_right_6_joint",
-    "arm_right_7_joint",
-    "gripper_left_joint",
-    "gripper_right_joint",
-    "head_1_joint",
-    "head_2_joint",
-    "leg_left_1_joint",
-    "leg_left_2_joint",
-    "leg_left_3_joint",
-    "leg_left_4_joint",
-    "leg_left_5_joint",
-    "leg_left_6_joint",
-    "leg_right_1_joint",
-    "leg_right_2_joint",
-    "leg_right_3_joint",
-    "leg_right_4_joint",
-    "leg_right_5_joint",
-    "leg_right_6_joint",
-    "torso_1_joint",
-    "torso_2_joint",
+  gz_transport_hw_tools::RobotCtrlJointInfos talos_ctrl_joint_infos {
+    { "arm_left_1_joint", { 0.25847 , 0.0, 5000.0, 1.0, 0.0, 0.0, 0.0}, },    
+    { "arm_left_2_joint", { 0.173046, 0.0, 5000.0, 1.0, 0.0, 0.0, 0.0} },
+    { "arm_left_3_joint", {-0.0002  , 0.0, 2000.0, 10.0, 0.0, 0.0, 0.0} },
+    { "arm_left_4_joint", {-0.525366, 0.0, 2000.0, 10.0, 0.0, 0.0, 0.0} }, 
+    { "arm_left_5_joint", { 0.0     , 0.0, 250.0, 1.0, 0.0, 0.0, 0.0} },    
+    { "arm_left_6_joint", { 0.0     , 0.0, 250.0, 1.0, 0.0, 0.0, 0.0} },
+    { "arm_left_7_joint", { 0.1     , 0.0, 250.0, 1.0, 0.0, 0.0, 0.0} },
+    { "arm_right_1_joint", {-0.25847 , 0.0, 5000.0, 1.0, 0.0, 0.0, 0.0} },
+    { "arm_right_2_joint", {-0.173046, 0.0, 5000.0, 1.0, 0.0, 0.0, 0.0}},
+    { "arm_right_3_joint", { 0.0002  , 0.0, 2000.0, 10.0, 0.0, 0.0, 0.0} },
+    { "arm_right_4_joint", {-0.525366, 0.0, 2000.0, 10.0, 0.0, 0.0, 0.0} },
+    { "arm_right_5_joint", { 0.0     , 0.0, 250.0, 1.0, 0.0, 0.0, 0.0}},
+    { "arm_right_6_joint", { 0.0     , 0.0, 250.0, 1.0, 0.0, 0.0, 0.0}},
+    { "arm_right_7_joint", { 0.1     , 0.0, 250.0, 1.0, 0.0, 0.0, 0.0}},
+    { "gripper_left_joint", { 0.0     , 0.0, 1000.0, 10.0, 0.0, 0.0, 0.0}},
+    { "gripper_right_joint", { 0.0     , 0.0, 1000.0, 10.0, 0.0, 0.0, 0.0}},
+    { "head_1_joint", { 0.     , 0.0, 300.0, 0.1, 0.0, 0.0, 0.0}},
+    { "head_2_joint", { 0.     , 0.0, 300.0, 0.1, 0.0, 0.0, 0.0} },
+    { "leg_left_1_joint",{ 0.0     , 0.0, 5000.0, 5.0, 0.0, 0.0, 0.0}},
+    { "leg_left_2_joint",{ 0.0     , 0.0, 5000.0, 5.0, 0.0, 0.0, 0.0}},
+    { "leg_left_3_joint",{-0.411354, 0.0, 5000.0, 5.0, 0.0, 0.0, 0.0}},
+    { "leg_left_4_joint",{ 0.859395, 0.0, 5000.0, 5.0, 0.0, 0.0, 0.0}},
+    { "leg_left_5_joint",{-0.448041, 0.0, 5000.0, 5.0, 0.0, 0.0, 0.0}},
+    { "leg_left_6_joint",{-0.001708, 0.0, 5000.0, 5.0, 0.0, 0.0, 0.0}},
+    { "leg_right_1_joint",{ 0.0     , 0.0, 5000.0, 5.0, 0.0, 0.0, 0.0}},
+    { "leg_right_2_joint",{ 0.0     , 0.0, 5000.0, 5.0, 0.0, 0.0, 0.0}},
+    { "leg_right_3_joint",{-0.411354, 0.0, 5000.0, 5.0, 0.0, 0.0, 0.0}},
+    { "leg_right_4_joint",{0.859395 , 0.0, 5000.0, 5.0, 0.0, 0.0, 0.0}},
+    { "leg_right_5_joint",{-0.448041, 0.0, 5000.0, 5.0, 0.0, 0.0, 0.0}},
+    { "leg_right_6_joint",{-0.001708, 0.0, 5000.0, 5.0, 0.0, 0.0, 0.0}},
+    { "torso_1_joint",{ 0.0     , 0.0, 10000.0, 10.0, 0.0, 0.0, 0.0}},
+    { "torso_2_joint",{ 0.006761, 0.0, 10000.0, 10.0, 0.0, 0.0, 0.0}}
   };
 
-  std::string a_prefix_model_root("/model/Pyrene/");
-  std::string a_prefix_world("/world/empty_talos_gz");
+  gz_transport_hw_tools::RobotCtrlJointInfos h1_2_ctrl_joint_infos {
+    { "left_shoulder_pitch_joint", { 0.0, 0.0, 10000.0, 1.0, 0.0, 0.0, 0.0}, },    
+    { "left_shoulder_roll_joint",  { 0.0, 0.0, 10000.0, 1.0, 0.0, 0.0, 0.0} },
+    { "left_shoulder_yaw_joint",   { 0.0, 0.0, 5000.0, 10.0, 0.0, 0.0, 0.0} },
+    { "left_elbow_joint",          { 0.0, 0.0, 5000.0, 10.0, 0.0, 0.0, 0.0} }, 
+    { "left_wrist_roll_joint",     { 0.0, 0.0, 500.0, 1.0, 0.0, 0.0, 0.0} },    
+    { "left_wrist_pitch_joint",    { 0.0, 0.0, 500.0, 1.0, 0.0, 0.0, 0.0} },
+    { "left_wrist_yaw_joint",      { 0.0, 0.0, 500.0, 1.0, 0.0, 0.0, 0.0} },
+    { "right_shoulder_pitch_joint",{ 0.0, 0.0, 10000.0, 5.0, 0.0, 0.0, 0.0} },
+    { "right_shoulder_roll_joint", { 0.0, 0.0, 10000.0, 5.0, 0.0, 0.0, 0.0}},
+    { "right_shoulder_yaw_joint",  { 0.0, 0.0, 5000.0, 10.0, 0.0, 0.0, 0.0} },
+    { "right_elbow_joint",         { 0.0, 0.0, 5000.0, 10.0, 0.0, 0.0, 0.0} },
+    { "right_wrist_roll_joint",    { 0.0, 0.0, 500.0, 1.0, 0.0, 0.0, 0.0}},
+    { "right_wrist_pitch_joint",   { 0.0, 0.0, 500.0, 1.0, 0.0, 0.0, 0.0}},
+    { "right_wrist_yaw_joint",     { 0.0, 0.0, 500.0, 1.0, 0.0, 0.0, 0.0}},
+    { "left_hip_yaw_joint",        { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}},
+    { "left_hip_pitch_joint",      { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}},
+    { "left_hip_roll_joint",       { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}},
+    { "left_knee_joint",           { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}},
+    { "left_ankle_pitch_joint",    { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}},
+    { "left_ankle_roll_joint",     { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}},
+    { "right_hip_yaw_joint",       { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}},
+    { "right_hip_pitch_joint",     { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}},
+    { "right_hip_roll_joint",      { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}},
+    { "right_knee_joint",          { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}},
+    { "right_ankle_pitch_joint",   { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}},
+    { "right_ankle_roll_joint",    { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}},
+    { "torso_joint",               { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}},
+  };
 
+  
+  std::string talos_prefix_model_root("/model/Pyrene/");
+  std::string talos_prefix_world("/world/empty_talos_gz");
+
+  std::string h1_v2_prefix_model_root("/model/H1/");
+  std::string h1_v2_prefix_world("/world/empty_h1_2_gz");
+
+
+  std::string & a_prefix_model_root = ( choice ==0 ) ?
+      h1_v2_prefix_model_root : talos_prefix_model_root;
+      
+  std::string & a_prefix_world = (choice == 0) ?
+      h1_v2_prefix_world: talos_prefix_world;
+     
+  gz_transport_hw_tools::RobotCtrlJointInfos &
+    a_robot_ctrl_joint_infos = (choice==0) ?
+      h1_2_ctrl_joint_infos: talos_ctrl_joint_infos ;
+      
   bool debug_level = false;
-  gz_transport_hw_tools::JointStateInterface
-      a_joint_state_inter(a_prefix_model_root,
-                          a_prefix_world,
-                          debug_level);
-
-  gz_transport_hw_tools::ControlOverGz aControlOverGz(a_prefix_world,debug_level);
-
-  a_joint_state_inter.SetListOfJoints(talos_list_of_joints);
-
-  std::vector<double> cmd_vec_d;
-  cmd_vec_d.resize(talos_list_of_joints.size());
-  for(unsigned int i=0;i<talos_list_of_joints.size();i++)
-    cmd_vec_d[i]=100.0;
-
-  // Publish messages at 1Hz.
-  std::vector<double> pos_mes_d,vel_mes_d, pos_err_d,vel_err_d;
-  pos_mes_d.resize(talos_list_of_joints.size());
-  vel_mes_d.resize(talos_list_of_joints.size());
-  pos_err_d.resize(talos_list_of_joints.size());
-  vel_err_d.resize(talos_list_of_joints.size());
-
-  // Desired position and velocity
-  std::vector<double> pos_des_d  { 0.25847, 0.173046, -0.0002, -0.525366, 0, 0, 0.1, // arm_left
-    -0.25847, -0.173046, 0.0002, -0.525366, 0, 0, 0.1, // arm_right
-    0, 0, // gripper
-    0, 0, // head
-    0, 0, -0.411354, 0.859395, -0.448041, -0.001708, // leg_left
-    0, 0, -0.411354, 0.859395, -0.448041, -0.001708, // leg_right
-    0, 0.006761 // torso
-  };
-  std::map<std::string, double> named_pos_des_d;
-  if (talos_list_of_joints.size()!=pos_des_d.size())
-    std::cerr << "Size between talos_list_of_joints and pos_des_d do not match." << std::endl;
-
-  for(unsigned int i=0;i<talos_list_of_joints.size();i++)
-    named_pos_des_d[talos_list_of_joints[i]]= pos_des_d[i];
-
-  std::vector<double> vel_des_d  { 0, 0, 0, 0, 0, 0, 0, // arm_left
-    0, 0, 0, 0, 0, 0, 0, // arm_right
-    0, 0, // gripper
-    0, 0, // head
-    0, 0, 0, 0, 0, 0, 0, // leg_left
-    0, 0, 0, 0, 0, 0, 0, // leg_right
-    0, 0 // torso
-  };
-
-  std::vector<double> Kp { /* 1000.0, 1000.0, 1000.0, 1000.0, 1000.0, 1000.0, 1000.0, // arm_left
-    1000.0, 1000.0, 1000.0, 1000.0, 1000.0, 1000.0, 1000.0, // arm_right
-    100.0, 100.0, // gripper
-    100.0, 100.0, // head*/
-    1000.0, 1000.0, 1000.0, 1000.0, 1000.0, 1000.0, 1000.0, // arm_left
-    1000.0, 1000.0, 1000.0, 1000.0, 1000.0, 1000.0, 1000.0, // arm_right
-    0.0, 0.0, // gripper
-    0.0, 0.0, // head
-    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, // leg_left
-    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, // leg_right
-    1000.0, 1000.0 // torso
-  };
-
-  std::vector<double> Kd { 10.0, 10.0, 0.0, 0.0, 0.0, 0.0, 0.0, // arm_left
-    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, // arm_right
-    0.0, 0.0, // gripper
-    0.0, 0.0, // head
-    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, // leg_left
-    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, // leg_right
-    0.0, 0.0 // torso
-  };
-  unsigned long long int local_time=0;
-
-  if (!aControlOverGz.Reset())  {
-    std::cerr << "Reset failed" << std::endl;
-  }
-  double state_gz_time=0.0;
-  double pre_state_gz_time=aControlOverGz.GetSimTime();
-  // Wait 1 ms to perform reset.
-  std::this_thread::sleep_for(std::chrono::nanoseconds(1ms));
-  // Start simulation.
-  aControlOverGz.Step();
-
-  /// Synchronize simulation wait for starting.
-  unsigned long int i=0;
-  while(std::isnan(pre_state_gz_time) ||
-         (pre_state_gz_time>0.001))
-  { ///  Wait (1ms)
-    std::this_thread::sleep_for(std::chrono::nanoseconds(1ms));
-    pre_state_gz_time=aControlOverGz.GetSimTime();
-    if ((i%100==0) && (i>1)){
-      aControlOverGz.Reset();
-      std::this_thread::sleep_for(std::chrono::nanoseconds(1ms));
-      aControlOverGz.Step();
-      /* std::cerr << "control_loop stuck in the waiting loop for starting."
-                << std::endl
-                << pre_state_gz_time << " "
-                << i << " "
-                << std::endl; */
-    }
-    i++;
-  }
-
-  aControlOverGz.ReadWorldStateToInitECM();
-
-  unsigned long int internal_timer = 0;
-  /// CTRL-C loop
-  while (!g_terminatePub)
-  {
-    /// Sense
-    bool is_sim_ready = a_joint_state_inter.GetPosVel(pos_mes_d, vel_mes_d,state_gz_time);
-
-    if (debug_level)
-      std::cerr << "control_loop: "
-                << is_sim_ready << " "
-                << pre_state_gz_time << " "
-                << state_gz_time << " "
-                << std::endl;
-    if ((is_sim_ready) && // If the simulation is ready
-        (pre_state_gz_time<state_gz_time) && // If the pre_state_gz_time is before state_gz_time
-        (fabs(pre_state_gz_time-state_gz_time) < 0.005) // The update of state_gz_time might happen before
-        // reset and then putting state_gz_time to far ahead.
-        ) {
-      /// Control
-      for(unsigned int i=0;i<talos_list_of_joints.size();i++)
-      {
-        pos_err_d[i] = pos_des_d[i] - pos_mes_d[i];
-        vel_err_d[i] = vel_des_d[i] - vel_mes_d[i];
-
-        cmd_vec_d[i] = Kp[i] * pos_err_d[i] + Kd[i]* vel_err_d[i];
-
-      }
-
-      /// Store Gazebo time
-      pre_state_gz_time = state_gz_time;
 
 
-      if (local_time==1) {
-        aControlOverGz.ReadWorldStateToInitECM();
-        aControlOverGz.SendWorldControlStateToInitECM(named_pos_des_d);
-      }
-      else {
+  gz_transport_hw_tools::PerceptionActionLoop a_pal(a_robot_ctrl_joint_infos,
+                             a_prefix_model_root,
+                             a_prefix_world,
+                             debug_level);
 
-        if (local_time>1)
-        {
-          if (a_joint_state_inter.SetCmd(cmd_vec_d))
-          {
-            // std::cout   << pos_err_d[1] << " "
-            //             << vel_err_d[1] << " "
-            //             << pos_des_d[1] << " "
-            //             << pos_mes_d[1] << std::endl;
-            for(unsigned int i=0;i<talos_list_of_joints.size();i++)
-              std::cout << pos_mes_d[i] << " ";
-            // std::cout << Kp[1] << " "
-            //           << Kd[1] << " "
-            //           << state_gz_time << " "
-            //           << pre_state_gz_time << " "
-            std::cout  << std::endl;
-          }
-        }
 
-        // Start simulation.
-        // TODO : Verify that step has converged before returning.
-        aControlOverGz.Step();
-      }
+  a_pal.InitGz();
 
-      local_time++;
-
-      internal_timer=0;
-      /// Stop after 0.2 seconds.
-      if (local_time>2000)
-        break;
-    } else
-    {
-
-      // We have missed the Step for one sec.
-      if ((internal_timer>=1000) &&
-          (pre_state_gz_time==state_gz_time))
-      {
-        std::cerr << "internal_timer: " << internal_timer << std::endl;
-        aControlOverGz.Step();
-        internal_timer=0;
-      }
-
-    }
-    std::this_thread::sleep_for(1ms);
-    internal_timer++;
-  }
-  //  aControlOverGz.SendWorldControlState();
-
-  aControlOverGz.Pause();
+  a_pal.MainLoop();
 
   return 0;
 }

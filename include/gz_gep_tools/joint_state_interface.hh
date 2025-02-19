@@ -2,6 +2,7 @@
 /// Standard includes
 #include <vector>
 #include <string>
+#include <memory>
 
 /// GZ includes
 #include <gz/msgs.hh>
@@ -9,31 +10,60 @@
 
 namespace gz_transport_hw_tools {
 
-class LastState {
+class ControlJointValue {
+ public:
+  /// Desired quantities
+  double pos_des, vel_des;
+
+  // Control gains
+  double Kp, Kd;
+
+  // Measured quantities
+  double pos_mes, vel_mes;
+
+  double cmd;
+
+  void compute_cmd()
+  {
+    cmd = Kp*(pos_des - pos_mes) + Kd*(vel_des -vel_mes);
+  }
+};
+
+typedef std::map<std::string, ControlJointValue> RobotCtrlJointInfos;
+
+bool SaveCmd(const RobotCtrlJointInfos & a_rbt_ctrl_joint_infos,
+                   const std::string &afilename);
+bool SavePos(const RobotCtrlJointInfos & a_rbt_ctrl_joint_infos,
+                   const std::string &afilename);                     
+
+
+class JointValues {
+ public:
+  /// Measured quantities
+  double pos_mes;
+  double vel_mes;
+  /// Control
+  double force_ctrl;
+
+  std::string cmd_force_topic;
+  gz::transport::Node::Publisher gz_pub_cmd_force;
+};
+
+
+class RobotJoints {
  public:
   /// Time
   int64_t time_sec_;
   int64_t time_nsec_;
 
-  /// Position
-  std::vector<double> positions_;
-
-  /// Velocity
-  std::vector<double> velocities_;
-
-  void resize(std::size_t asize);
-
+  /// Map of joints values
+  std::map<std::string, JointValues> dict_joint_values;
+  
   std::mutex lock_state_access_;
-  LastState();
+  
+  RobotJoints();
 };
 
-class JointValues {
-  double pos_mes;
-  double vel_mes;
-  double force_ctrl;
-  std::string cmd_force_topic;
-  gz::transport::Node::Publisher gz_pub_cmd_force;
-};
 
 /// This class handles the interface to the joints and the sensors
 /// of a robot simulated by Gazebo (Harmonic)
@@ -47,13 +77,12 @@ class JointStateInterface {
   ~JointStateInterface();
 
   /// Specify the list of joints.
-  void SetListOfJoints(const std::vector<std::string> & a_list_of_joints);
+  void SetListOfJoints(const RobotCtrlJointInfos & rbt_ctrl_joint_infos);
 
 
-  bool SetCmd(const std::vector<double> &cmd_vec);
+  bool SetCmd(const RobotCtrlJointInfos &rbt_ctrl_joint_infos);
 
-  bool GetPosVel(std::vector<double> &pos_vecd,
-                 std::vector<double> &vel_vecd,
+  bool GetPosVel(RobotCtrlJointInfos &rbt_ctrl_joint_infos,
                  double &time);
 
   private:
@@ -73,20 +102,14 @@ class JointStateInterface {
   /// Map joints to index in list
   std::map<std::string, std::size_t> map_name_2_indx_;
 
-  /// Vector of string describing the topics to command forces on actuators.
-  std::vector<std::string> cmd_force_topics_;
-
   /// Topic name joint state
   std::string joint_state_topic_;
-
-  /// GZ published for the cmd_force.
-  std::vector<gz::transport::Node::Publisher> gz_pub_cmd_forces_;
 
   /// GZ node
   gz::transport::Node node_;
 
   /// Last state of the robot
-  LastState last_state_;
+  RobotJoints robot_joints_;
 
   bool debug_level_;
 };

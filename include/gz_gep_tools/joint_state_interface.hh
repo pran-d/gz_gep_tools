@@ -9,35 +9,79 @@
 #include <gz/transport.hh>
 
 namespace gz_transport_hw_tools {
-
+/// This class is to be used by the user to provide:
+/// @param Kp: Gain to reach the desired position pos_des
+/// @param Kd: Gain to reach the desired velocity vel_des
+/// @param Ki; Gain for the integral error
+/// @param i_clamp: Clamping the integral action
+/// @param pos_des: Desired position (used for the initailization phase, i.e. at
+/// start up)
+/// @param vel_des: Velocity position (used for the initailization phase, i.e.
+/// at start up)
+/// Each joint has such a structure which can initialized in a container here a map.
 class ControlJointValue {
  public:
+
+  ControlJointValue( double Kp,
+                     double Kd,
+                     double Ki,
+                     double i_clamp,
+                     double pos_des,
+                     double vel_des);
+
+  ControlJointValue(const ControlJointValue &other);
+
+  ControlJointValue(const ControlJointValue &&other) noexcept;
+
+  double Cmd() const { return cmd_;}
+  double PosMes() const { return pos_mes_;}
+  double VelMes() const { return vel_mes_;}
+  double PosDes() const { return pos_des_;}
+  double VelDes() const { return vel_des_;}
+
+  void SetPosMes(double &pos_mes) { pos_mes_ = pos_mes;}
+  void SetVelMes(double &vel_mes) { vel_mes_ = vel_mes;}
+
+  void ComputeCmd();
+
+ private:
+
   /// Desired quantities
-  double pos_des, vel_des;
+  double pos_des_, vel_des_;
 
   // Control gains
-  double Kp, Kd;
+  double Kp_, Kd_, Ki_;
 
+  // Clamping i value to i_clamp
+  double i_clamp_;
+  
   // Measured quantities
-  double pos_mes, vel_mes;
+  double pos_mes_, vel_mes_;
 
-  double cmd;
+  /// Command
+  double cmd_;
 
-  void compute_cmd()
-  {
-    cmd = Kp*(pos_des - pos_mes) + Kd*(vel_des -vel_mes);
-  }
+  /// Cumulative error
+  double cumul_err_;
+
+
 };
 
+/// Definition of the type handling a map of controlled joint
 typedef std::map<std::string, ControlJointValue> RobotCtrlJointInfos;
 
 bool SaveCmd(const RobotCtrlJointInfos & a_rbt_ctrl_joint_infos,
-                   const std::string &afilename);
+             const std::string &afilename);
 bool SavePos(const RobotCtrlJointInfos & a_rbt_ctrl_joint_infos,
-                   const std::string &afilename);                     
+             const std::string &afilename);
+bool SavePosDes(const RobotCtrlJointInfos & a_rbt_ctrl_joint_infos,
+                const std::string &afilename);
+bool SaveListOfNamedJoints(const RobotCtrlJointInfos &a_rbt_ctrl_joint_infos,
+                           const std::string &afilename);
 
-
-class JointValues {
+/// Intermediate structure used to read information from Gazebo "joint_name/joint_state" topic.
+/// 
+class GZJointValues {
  public:
   /// Measured quantities
   double pos_mes;
@@ -50,18 +94,18 @@ class JointValues {
 };
 
 
-class RobotJoints {
+class GZRobotJoints {
  public:
   /// Time
   int64_t time_sec_;
   int64_t time_nsec_;
 
   /// Map of joints values
-  std::map<std::string, JointValues> dict_joint_values;
-  
+  std::map<std::string, GZJointValues> dict_joint_values;
+
   std::mutex lock_state_access_;
-  
-  RobotJoints();
+
+  GZRobotJoints();
 };
 
 
@@ -96,20 +140,14 @@ class JointStateInterface {
   /// Prefix world
   std::string prefix_world_;
 
-  /// List of joints
-  std::vector<std::string> list_of_joints_;
-
-  /// Map joints to index in list
-  std::map<std::string, std::size_t> map_name_2_indx_;
-
   /// Topic name joint state
   std::string joint_state_topic_;
 
   /// GZ node
   gz::transport::Node node_;
 
-  /// Last state of the robot
-  RobotJoints robot_joints_;
+  /// Last state of the robot from Gazebo
+  GZRobotJoints gz_robot_joints_;
 
   bool debug_level_;
 };

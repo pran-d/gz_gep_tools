@@ -214,7 +214,7 @@ bool ControlOverGz::SendWorldControlStateToInitECM(const RobotCtrlJointInfos &rb
     auto a_ctrl_joint_info = rbt_ctrl_joint_infos.find(jointName);
     if (a_ctrl_joint_info != rbt_ctrl_joint_infos.end())
     {
-      one_vecd.push_back(a_ctrl_joint_info->second.pos_des);
+      one_vecd.push_back(a_ctrl_joint_info->second.PosDes());
       //    std::cout << " " << one_vecd[0] << std::endl;
       aJoint.ResetPosition(Robot_ECM_,one_vecd);
     }

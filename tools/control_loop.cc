@@ -33,6 +33,7 @@
 #include <gz_gep_tools/perception_action_loop.hh>
 
 
+using namespace gz_transport_hw_tools;
 //////////////////////////////////////////////////
 int main(int argc, char **argv)
 {
@@ -50,72 +51,72 @@ int main(int argc, char **argv)
 
   // Create a transport node and advertise a topic.
   gz::transport::Node node;
-  gz_transport_hw_tools::RobotCtrlJointInfos talos_ctrl_joint_infos {
-    { "arm_left_1_joint", { 0.25847 , 0.0, 5000.0, 1.0, 0.0, 0.0, 0.0}, },    
-    { "arm_left_2_joint", { 0.173046, 0.0, 5000.0, 1.0, 0.0, 0.0, 0.0} },
-    { "arm_left_3_joint", {-0.0002  , 0.0, 2000.0, 10.0, 0.0, 0.0, 0.0} },
-    { "arm_left_4_joint", {-0.525366, 0.0, 2000.0, 10.0, 0.0, 0.0, 0.0} }, 
-    { "arm_left_5_joint", { 0.0     , 0.0, 250.0, 1.0, 0.0, 0.0, 0.0} },    
-    { "arm_left_6_joint", { 0.0     , 0.0, 250.0, 1.0, 0.0, 0.0, 0.0} },
-    { "arm_left_7_joint", { 0.1     , 0.0, 250.0, 1.0, 0.0, 0.0, 0.0} },
-    { "arm_right_1_joint", {-0.25847 , 0.0, 5000.0, 1.0, 0.0, 0.0, 0.0} },
-    { "arm_right_2_joint", {-0.173046, 0.0, 5000.0, 1.0, 0.0, 0.0, 0.0}},
-    { "arm_right_3_joint", { 0.0002  , 0.0, 2000.0, 10.0, 0.0, 0.0, 0.0} },
-    { "arm_right_4_joint", {-0.525366, 0.0, 2000.0, 10.0, 0.0, 0.0, 0.0} },
-    { "arm_right_5_joint", { 0.0     , 0.0, 250.0, 1.0, 0.0, 0.0, 0.0}},
-    { "arm_right_6_joint", { 0.0     , 0.0, 250.0, 1.0, 0.0, 0.0, 0.0}},
-    { "arm_right_7_joint", { 0.1     , 0.0, 250.0, 1.0, 0.0, 0.0, 0.0}},
-    { "gripper_left_joint", { 0.0     , 0.0, 1000.0, 10.0, 0.0, 0.0, 0.0}},
-    { "gripper_right_joint", { 0.0     , 0.0, 1000.0, 10.0, 0.0, 0.0, 0.0}},
-    { "head_1_joint", { 0.     , 0.0, 300.0, 0.1, 0.0, 0.0, 0.0}},
-    { "head_2_joint", { 0.     , 0.0, 300.0, 0.1, 0.0, 0.0, 0.0} },
-    { "leg_left_1_joint",{ 0.0     , 0.0, 5000.0, 5.0, 0.0, 0.0, 0.0}},
-    { "leg_left_2_joint",{ 0.0     , 0.0, 5000.0, 5.0, 0.0, 0.0, 0.0}},
-    { "leg_left_3_joint",{-0.411354, 0.0, 5000.0, 5.0, 0.0, 0.0, 0.0}},
-    { "leg_left_4_joint",{ 0.859395, 0.0, 5000.0, 5.0, 0.0, 0.0, 0.0}},
-    { "leg_left_5_joint",{-0.448041, 0.0, 5000.0, 5.0, 0.0, 0.0, 0.0}},
-    { "leg_left_6_joint",{-0.001708, 0.0, 5000.0, 5.0, 0.0, 0.0, 0.0}},
-    { "leg_right_1_joint",{ 0.0     , 0.0, 5000.0, 5.0, 0.0, 0.0, 0.0}},
-    { "leg_right_2_joint",{ 0.0     , 0.0, 5000.0, 5.0, 0.0, 0.0, 0.0}},
-    { "leg_right_3_joint",{-0.411354, 0.0, 5000.0, 5.0, 0.0, 0.0, 0.0}},
-    { "leg_right_4_joint",{0.859395 , 0.0, 5000.0, 5.0, 0.0, 0.0, 0.0}},
-    { "leg_right_5_joint",{-0.448041, 0.0, 5000.0, 5.0, 0.0, 0.0, 0.0}},
-    { "leg_right_6_joint",{-0.001708, 0.0, 5000.0, 5.0, 0.0, 0.0, 0.0}},
-    { "torso_1_joint",{ 0.0     , 0.0, 10000.0, 10.0, 0.0, 0.0, 0.0}},
-    { "torso_2_joint",{ 0.006761, 0.0, 10000.0, 10.0, 0.0, 0.0, 0.0}}
+  RobotCtrlJointInfos talos_ctrl_joint_infos {
+    { "arm_left_1_joint", ControlJointValue(  10000.0, 0.01, 1.0, 14.0, 0.25847 ,  0.0)},
+    { "arm_left_2_joint", ControlJointValue(  10000.0, 0.01, 1.0, 14.0, 0.173046,  0.0)},
+    { "arm_left_3_joint", ControlJointValue(   5000.0, 0.0 , 1.0,  9.0, -0.0002  , 0.0)},
+    { "arm_left_4_joint", ControlJointValue(   5000.0, 0.0 , 1.0,  9.0, -0.525366, 0.0)},
+    { "arm_left_5_joint", ControlJointValue(    500.0, 1.0 , 0.1,  5.0,  0.0,      0.0)},
+    { "arm_left_6_joint", ControlJointValue(    500.0, 1.0 , 0.1,  5.0,  0.0,      0.0)},
+    { "arm_left_7_joint", ControlJointValue(    100.0, 1.0 , 0.0,  3.0,  0.0,      0.0)},
+    { "arm_right_1_joint", ControlJointValue( 10000.0, 0.01, 1.0, 14.0, -0.25847 , 0.0)},
+    { "arm_right_2_joint", ControlJointValue( 10000.0, 0.01, 1.0, 14.0, -0.173046, 0.0)},
+    { "arm_right_3_joint", ControlJointValue(  5000.0, 0.0 , 1.0,  9.0,  0.0002  , 0.0)},
+    { "arm_right_4_joint", ControlJointValue(  5000.0, 0.0 , 1.0,  9.0, -0.525366, 0.0)},
+    { "arm_right_5_joint", ControlJointValue(   500.0, 1.0 , 0.1,  5.0,  0.0,      0.0)},
+    { "arm_right_6_joint", ControlJointValue(   500.0, 1.0 , 0.1,  5.0,  0.0,      0.0)},
+    { "arm_right_7_joint", ControlJointValue(   500.0, 1.0 , 0.1,  5.0,  0.0,      0.0)},
+    { "gripper_left_joint",  ControlJointValue(1000.0,10.0 , 1.0, 10.0,  0.0,      0.0)},
+    { "gripper_right_joint", ControlJointValue(1000.0,10.0 , 1.0, 10.0,  0.0,      0.0)},
+    { "head_1_joint", ControlJointValue(        300.0, 0.1,  1.0,  5.0,  0.0,      0.0)},
+    { "head_2_joint", ControlJointValue(        300.0, 0.1,  1.0,  1.5,  0.0,      0.0)},
+    { "leg_left_1_joint", ControlJointValue(   5000.0,20.0,  5.0,   7.0, 0.0,      0.0)},
+    { "leg_left_2_joint", ControlJointValue(   5000.0,20.0,  5.0,  14.0, 0.0,      0.0)},
+    { "leg_left_3_joint", ControlJointValue(   5000.0,20.0,  5.0,  14.0,-0.448041, 0.0)},
+    { "leg_left_4_joint", ControlJointValue(   5000.0,20.0,  5.0,  25.0, 0.896082, 0.0)},
+    { "leg_left_5_joint", ControlJointValue(   5000.0,20.0,  5.0,  14.0,-0.448041, 0.0)},
+    { "leg_left_6_joint", ControlJointValue(   5000.0,20.0,  5.0,   9.0, 0.0,      0.0)},
+    { "leg_right_1_joint", ControlJointValue(  5000.0,20.0,  5.0,   7.0, 0.0,      0.0)},
+    { "leg_right_2_joint", ControlJointValue(  5000.0,20.0,  5.0,  14.0, 0.0,      0.0)},
+    { "leg_right_3_joint", ControlJointValue(  5000.0,20.0,  5.0,  14.0,-0.448041, 0.0)},
+    { "leg_right_4_joint", ControlJointValue(  5000.0,20.0,  5.0,  25.0, 0.896082, 0.0)},
+    { "leg_right_5_joint", ControlJointValue(  5000.0,20.0,  5.0,   9.0,-0.448041, 0.0)},
+    { "leg_right_6_joint", ControlJointValue(  5000.0,20.0,  5.0,   7.0, 0.0,      0.0)},
+    { "torso_1_joint",     ControlJointValue( 10000.0,10.0,  1.0,  10.0, 0.0,      0.0)},
+    { "torso_2_joint",     ControlJointValue( 10000.0,10.0,  1.0,  10.0, 0.0,      0.0)}
   };
 
   gz_transport_hw_tools::RobotCtrlJointInfos h1_2_ctrl_joint_infos {
-    { "left_shoulder_pitch_joint", { 0.0, 0.0, 10000.0, 1.0, 0.0, 0.0, 0.0}, },    
-    { "left_shoulder_roll_joint",  { 0.0, 0.0, 10000.0, 1.0, 0.0, 0.0, 0.0} },
-    { "left_shoulder_yaw_joint",   { 0.0, 0.0, 5000.0, 10.0, 0.0, 0.0, 0.0} },
-    { "left_elbow_joint",          { 0.0, 0.0, 5000.0, 10.0, 0.0, 0.0, 0.0} }, 
-    { "left_wrist_roll_joint",     { 0.0, 0.0, 500.0, 1.0, 0.0, 0.0, 0.0} },    
-    { "left_wrist_pitch_joint",    { 0.0, 0.0, 500.0, 1.0, 0.0, 0.0, 0.0} },
-    { "left_wrist_yaw_joint",      { 0.0, 0.0, 500.0, 1.0, 0.0, 0.0, 0.0} },
-    { "right_shoulder_pitch_joint",{ 0.0, 0.0, 10000.0, 5.0, 0.0, 0.0, 0.0} },
-    { "right_shoulder_roll_joint", { 0.0, 0.0, 10000.0, 5.0, 0.0, 0.0, 0.0}},
-    { "right_shoulder_yaw_joint",  { 0.0, 0.0, 5000.0, 10.0, 0.0, 0.0, 0.0} },
-    { "right_elbow_joint",         { 0.0, 0.0, 5000.0, 10.0, 0.0, 0.0, 0.0} },
-    { "right_wrist_roll_joint",    { 0.0, 0.0, 500.0, 1.0, 0.0, 0.0, 0.0}},
-    { "right_wrist_pitch_joint",   { 0.0, 0.0, 500.0, 1.0, 0.0, 0.0, 0.0}},
-    { "right_wrist_yaw_joint",     { 0.0, 0.0, 500.0, 1.0, 0.0, 0.0, 0.0}},
-    { "left_hip_yaw_joint",        { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}},
-    { "left_hip_pitch_joint",      { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}},
-    { "left_hip_roll_joint",       { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}},
-    { "left_knee_joint",           { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}},
-    { "left_ankle_pitch_joint",    { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}},
-    { "left_ankle_roll_joint",     { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}},
-    { "right_hip_yaw_joint",       { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}},
-    { "right_hip_pitch_joint",     { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}},
-    { "right_hip_roll_joint",      { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}},
-    { "right_knee_joint",          { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}},
-    { "right_ankle_pitch_joint",   { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}},
-    { "right_ankle_roll_joint",    { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}},
-    { "torso_joint",               { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}},
+    { "left_shoulder_pitch_joint", ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
+    { "left_shoulder_roll_joint",  ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
+    { "left_shoulder_yaw_joint",   ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
+    { "left_elbow_joint",          ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
+    { "left_wrist_roll_joint",     ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
+    { "left_wrist_pitch_joint",    ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
+    { "left_wrist_yaw_joint",      ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
+    { "right_shoulder_pitch_joint",ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
+    { "right_shoulder_roll_joint", ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
+    { "right_shoulder_yaw_joint",  ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
+    { "right_elbow_joint",         ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
+    { "right_wrist_roll_joint",    ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
+    { "right_wrist_pitch_joint",   ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
+    { "right_wrist_yaw_joint",     ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
+    { "left_hip_yaw_joint",        ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
+    { "left_hip_pitch_joint",      ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
+    { "left_hip_roll_joint",       ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
+    { "left_knee_joint",           ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
+    { "left_ankle_pitch_joint",    ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
+    { "left_ankle_roll_joint",     ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
+    { "right_hip_yaw_joint",       ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
+    { "right_hip_pitch_joint",     ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
+    { "right_hip_roll_joint",      ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
+    { "right_knee_joint",          ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
+    { "right_ankle_pitch_joint",   ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
+    { "right_ankle_roll_joint",    ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
+    { "torso_joint",               ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
   };
 
-  
+
   std::string talos_prefix_model_root("/model/Pyrene/");
   std::string talos_prefix_world("/world/empty_talos_gz");
 
@@ -125,14 +126,14 @@ int main(int argc, char **argv)
 
   std::string & a_prefix_model_root = ( choice ==0 ) ?
       h1_v2_prefix_model_root : talos_prefix_model_root;
-      
+
   std::string & a_prefix_world = (choice == 0) ?
       h1_v2_prefix_world: talos_prefix_world;
-     
+
   gz_transport_hw_tools::RobotCtrlJointInfos &
     a_robot_ctrl_joint_infos = (choice==0) ?
       h1_2_ctrl_joint_infos: talos_ctrl_joint_infos ;
-      
+
   bool debug_level = false;
 
 

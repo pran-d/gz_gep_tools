@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+package gz.msgs;
+
+message MapNamedJointForces {
+  map<string, double> JointForces= 1;
+}

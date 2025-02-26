@@ -38,3 +38,5 @@ target_include_directories(control_loop PUBLIC
   $<INSTALL_INTERFACE:include>)
 target_link_libraries(control_loop gz_transport_hw_interface)
 
+
+add_subdirectory(plugin)

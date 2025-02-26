@@ -28,13 +28,14 @@ void signal_handler(int _signal)
 
 namespace gz_transport_hw_tools {
 
-PerceptionActionLoop::PerceptionActionLoop(gz_transport_hw_tools::RobotCtrlJointInfos & a_robot_ctrl_joint_infos,
-                                           std::string &a_prefix_model_root,
-                                           std::string &a_prefix_world,
-                                           bool debug_level):
-    robot_ctrl_joint_infos_(a_robot_ctrl_joint_infos),
-    joint_state_interface_(a_prefix_model_root,a_prefix_world,debug_level),
-    control_over_gz_(a_prefix_world,debug_level) {
+PerceptionActionLoop::PerceptionActionLoop(
+    gz_transport_hw_tools::RobotCtrlJointInfos &a_robot_ctrl_joint_infos,
+    std::string &a_prefix_model_root, std::string &a_prefix_world,
+    bool debug_level)
+    : robot_ctrl_joint_infos_(a_robot_ctrl_joint_infos),
+      joint_state_interface_(a_prefix_model_root, a_prefix_world, debug_level),
+      control_over_gz_(a_prefix_world, debug_level), debug_level_(debug_level)
+      {
 
   joint_state_interface_.SetListOfJoints(a_robot_ctrl_joint_infos);
 
@@ -42,6 +43,9 @@ PerceptionActionLoop::PerceptionActionLoop(gz_transport_hw_tools::RobotCtrlJoint
   std::signal(SIGINT,  signal_handler);
   std::signal(SIGTERM, signal_handler);
 
+  // Save list of joint named
+  std::string filename_list_named_joints("/tmp/list_of_joints.dat");
+  SaveListOfNamedJoints(robot_ctrl_joint_infos_,filename_list_named_joints);
 }
 
 int PerceptionActionLoop::InitGz()
@@ -58,7 +62,7 @@ int PerceptionActionLoop::InitGz()
 
   using namespace std::chrono_literals;
   // Wait 1 ms to perform reset.
-  std::this_thread::sleep_for(std::chrono::nanoseconds(1ms));
+  //std::this_thread::sleep_for(std::chrono::nanoseconds(1ms));
   // Start simulation.
   control_over_gz_.Step();
   control_over_gz_.ReadWorldStateToInitECM();
@@ -66,11 +70,12 @@ int PerceptionActionLoop::InitGz()
   // Second reset to set the robot state to a specific position.
   if (!control_over_gz_.Reset())  {
     std::cerr << "Reset failed" << std::endl;
-  }  
+  }
   control_over_gz_.SendWorldControlStateToInitECM(robot_ctrl_joint_infos_);
-  control_over_gz_.DisplayLinkValues();
+  if (debug_level_)
+    control_over_gz_.DisplayLinkValues();
   control_over_gz_.Step();
-  
+
   /// Synchronize simulation wait for starting.
   unsigned long int i=0;
   while(std::isnan(pre_state_gz_time_) ||
@@ -80,9 +85,9 @@ int PerceptionActionLoop::InitGz()
     pre_state_gz_time_=control_over_gz_.GetSimTime();
     if ((i%10==0) && (i>1)){
       control_over_gz_.Reset();
-      std::this_thread::sleep_for(std::chrono::nanoseconds(2ms));
+      //  std::this_thread::sleep_for(std::chrono::nanoseconds(2ms));
       control_over_gz_.Step();
-      std::this_thread::sleep_for(std::chrono::nanoseconds(2ms));      
+      //std::this_thread::sleep_for(std::chrono::nanoseconds(2ms));
       if (i>100) {
         std::cerr << "control_loop stuck in the waiting loop for starting."
                   << std::endl
@@ -98,13 +103,18 @@ int PerceptionActionLoop::InitGz()
 }
 
 int PerceptionActionLoop::MainLoop()
-{    
+{
   unsigned long int internal_timer = 0;
   std::string filename_pos("/tmp/position.dat");
+  std::string filename_pos_des("/tmp/position_des.dat");
   std::string filename_cmd("/tmp/cmd.dat");
   std::ofstream ofs_position_robot(filename_pos),
-      ofs_cmd_robot(filename_cmd);  
-  
+      ofs_cmd_robot(filename_cmd),
+      ofs_position_des_robot(filename_pos_des);
+  ofs_position_robot.close();
+  ofs_cmd_robot.close();
+  ofs_position_des_robot.close();
+
   /// CTRL-C loop
   while (!g_terminatePub)
   {
@@ -131,7 +141,7 @@ int PerceptionActionLoop::MainLoop()
             it_ctrl_joint_i!=robot_ctrl_joint_infos_.end();
             it_ctrl_joint_i++)
         {
-          it_ctrl_joint_i->second.compute_cmd();
+          it_ctrl_joint_i->second.ComputeCmd();
         }
       }
 
@@ -142,9 +152,10 @@ int PerceptionActionLoop::MainLoop()
       if (joint_state_interface_.SetCmd(robot_ctrl_joint_infos_))
       {
         SavePos(robot_ctrl_joint_infos_,filename_pos);
-        SaveCmd(robot_ctrl_joint_infos_,filename_cmd);            
+        SavePosDes(robot_ctrl_joint_infos_,filename_pos_des);
+        SaveCmd(robot_ctrl_joint_infos_,filename_cmd);
       }
-      
+
       // Start simulation.
       // TODO : Verify that step has converged before returning.
       control_over_gz_.Step();

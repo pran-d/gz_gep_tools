@@ -34,7 +34,9 @@ class PerceptionActionLoop {
   double state_gz_time_;
   double pre_state_gz_time_;
   unsigned long long int local_time_;
-  
+
+  /// Debug level
+  bool debug_level_;
 };
 
 }

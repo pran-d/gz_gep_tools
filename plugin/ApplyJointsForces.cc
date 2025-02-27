@@ -32,7 +32,7 @@
 #include "gz/sim/Model.hh"
 #include "gz/sim/Util.hh"
 
-#include <gz/msgs/map_named_joint_forces.pb.h>
+#include <gz/msgs/map_named_joints_forces.pb.h>
 
 using namespace gz;
 using namespace sim;
@@ -48,26 +48,9 @@ class ActuatedJoint
 
   /// \brief Constructor that properly configures the actuated joint
   /// \param[in] _entity Entity of the joint
-  /// \param[in] _params All parameters of the joint required for its
   /// configuration
-  public: ActuatedJoint(const Entity &_entity);
+ public: ActuatedJoint(const Entity &an_entity): entity(an_entity) {};
 
-  /// \brief Setup components required for control of this joint
-  /// \param[in,out] _ecm Gazebo Entity Component Manager
-  public: void SetupComponents(
-              gz::sim::EntityComponentManager &_ecm) const;
-
-  /// \brief Set Torque of the joint that the controller will attempt to reach
-  /// \param[in] _jointIndex Index of the joint, used to determine what index
-  /// of `_targetPoint` to use
-  public: void SetJointForce(
-              const gz::msgs::Double &JointTorqueForce);
-
-  /// \brief Update command force that is applied on the joint
-  /// \param[in,out] _ecm Gazebo Entity Component Manager
-  /// \param[in] _dt Time difference to update for
-  public: void Update(gz::sim::EntityComponentManager &_ecm,
-                      const std::chrono::steady_clock::duration &_dt);
 
   /// \brief Entity of the joint
   public: Entity entity;
@@ -103,7 +86,7 @@ class gz::sim::systems::ApplyJointsForcesPrivate
 
   /// \brief Callback for joint force subscription
   /// \param[in] _msg Joint force message
- public: void CallbackCmdForce(const gz::msgs::MapNamedJointForces &_msg);
+ public: void CallbackCmdForce(const gz::msgs::MapNamedJointsForces &_msg);
 
   /// \brief Gazebo communication node.
   public: transport::Node node;
@@ -123,7 +106,7 @@ class gz::sim::systems::ApplyJointsForcesPrivate
   public: Model model{kNullEntity};
   //! [modelDeclaration]<q
 
-  public: 
+  public:
   template <typename T>
     std::vector<T> Parse(
     const std::shared_ptr<const sdf::Element> &_sdf,
@@ -209,11 +192,9 @@ void ApplyJointsForces::Configure(const Entity &_entity,
   //! [cmdTopic]
   auto topic = _sdf->Get<std::string>("topic");
   //! [cmdTopic]
-  if (topic.empty())
-  {
-    transport::TopicUtils::AsValidTopic("/model/" +
-      this->dataPtr->model.Name(_ecm) + "/joints/cmd_forces");
-  }
+  // TODO: Use the model namespace.
+  topic = "/model/" + this->dataPtr->model.Name(_ecm) + "/joints/" + topic;
+
 
   // Make sure the topic is valid
   const auto validApplyJointsForcesTopic = transport::TopicUtils::AsValidTopic(
@@ -222,12 +203,14 @@ void ApplyJointsForces::Configure(const Entity &_entity,
   {
     gzerr << "[ApplyJointsForces] Cannot subscribe to invalid topic ["
            << topic << "].\n";
+    gzerr << "/model/" +
+        this->dataPtr->model.Name(_ecm) + "/joints/cmd_forces\n";
     return;
   }
  // Subscribe
   gzmsg << "[ApplyJointsForces] Subscribing to ApplyJointsForces"
             " commands on topic [" << validApplyJointsForcesTopic << "].\n";
- 
+
   //! [cmdSub]
   this->dataPtr->node.Subscribe(validApplyJointsForcesTopic,
                                 &ApplyJointsForcesPrivate::CallbackCmdForce,
@@ -267,19 +250,19 @@ void ApplyJointsForces::PreUpdate(const UpdateInfo &_info,
           this->dataPtr->model.JointByName(_ecm, an_actuated_joint->first);
     }
     //! [findJoint]
-    
+
     if (an_actuated_joint->second.entity == kNullEntity)
       continue;
-    
+
 
     // Update joint force
     //! [jointForceComponent]
     auto force = _ecm.Component<components::JointForceCmd>(
         an_actuated_joint->second.entity);
     //! [jointForceComponent]
-    
+
     std::lock_guard<std::mutex> lock(this->dataPtr->jointForceCmdMutex);
-    
+
     //! [modifyComponent]
     if (force == nullptr)
     {
@@ -289,7 +272,7 @@ void ApplyJointsForces::PreUpdate(const UpdateInfo &_info,
     }
     else
     {
-      force->Data()[0] += an_actuated_joint->second.jointForceCmd;
+      force->Data()[0] = an_actuated_joint->second.jointForceCmd;
     }
   }
     //! [modifyComponent]
@@ -298,11 +281,11 @@ void ApplyJointsForces::PreUpdate(const UpdateInfo &_info,
 //////////////////////////////////////////////////
 //! [setForce]
 void ApplyJointsForcesPrivate::CallbackCmdForce(
-    const gz::msgs::MapNamedJointForces &mnjf_msg)
+    const gz::msgs::MapNamedJointsForces &mnjf_msg)
 {
   std::lock_guard<std::mutex> lock(this->jointForceCmdMutex);
-  for ( auto mnjf_it =  mnjf_msg.jointforces().begin();
-        mnjf_it !=  mnjf_msg.jointforces().end();
+  for ( auto mnjf_it =  mnjf_msg.jointsforces().begin();
+        mnjf_it !=  mnjf_msg.jointsforces().end();
         mnjf_it++)
   {
     actuatedJoints[mnjf_it->first].jointForceCmd = mnjf_it->second;
@@ -413,7 +396,7 @@ std::vector<Entity> ApplyJointsForcesPrivate::GetEnabledJoints(
   return output;
 }
 
-    
+
 
 GZ_ADD_PLUGIN(ApplyJointsForces,
                     System,

@@ -122,12 +122,13 @@ int PerceptionActionLoop::MainLoop()
     bool is_sim_ready = joint_state_interface_.GetPosVel(robot_ctrl_joint_infos_,
                                                          state_gz_time_);
 
-    std::cout << "state_gz_time:" << state_gz_time_ << std::endl;
-    //    if (debug_level)
+
+    if (debug_level_)
       std::cerr << "control_loop: "
                 << is_sim_ready << " "
                 << pre_state_gz_time_<< " "
                 << state_gz_time_ << " "
+                << internal_timer
                 << std::endl;
     if ((is_sim_ready) && // If the simulation is ready
         (pre_state_gz_time_<state_gz_time_) && // If the pre_state_gz_time_ is before state_gz_time_
@@ -171,10 +172,11 @@ int PerceptionActionLoop::MainLoop()
 
       // We have missed the Step for one sec.
       if ((internal_timer>=1000) &&
-          (pre_state_gz_time_==state_gz_time_))
+          (pre_state_gz_time_>=state_gz_time_))
       {
         std::cerr << "internal_timer: " << internal_timer << std::endl;
         control_over_gz_.Step();
+        std::cout << "Step in internal timer" << std::endl;
         internal_timer=0;
       }
 

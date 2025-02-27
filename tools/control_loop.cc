@@ -87,33 +87,33 @@ int main(int argc, char **argv)
   };
 
   gz_transport_hw_tools::RobotCtrlJointInfos h1_2_ctrl_joint_infos {
-    { "left_shoulder_pitch_joint", ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
-    { "left_shoulder_roll_joint",  ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
-    { "left_shoulder_yaw_joint",   ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
-    { "left_elbow_joint",          ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
-    { "left_wrist_roll_joint",     ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
-    { "left_wrist_pitch_joint",    ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
-    { "left_wrist_yaw_joint",      ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
-    { "right_shoulder_pitch_joint",ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
-    { "right_shoulder_roll_joint", ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
-    { "right_shoulder_yaw_joint",  ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
-    { "right_elbow_joint",         ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
-    { "right_wrist_roll_joint",    ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
-    { "right_wrist_pitch_joint",   ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
-    { "right_wrist_yaw_joint",     ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
-    { "left_hip_yaw_joint",        ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
-    { "left_hip_pitch_joint",      ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
-    { "left_hip_roll_joint",       ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
-    { "left_knee_joint",           ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
-    { "left_ankle_pitch_joint",    ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
-    { "left_ankle_roll_joint",     ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
-    { "right_hip_yaw_joint",       ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
-    { "right_hip_pitch_joint",     ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
-    { "right_hip_roll_joint",      ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
-    { "right_knee_joint",          ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
-    { "right_ankle_pitch_joint",   ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
-    { "right_ankle_roll_joint",    ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
-    { "torso_joint",               ControlJointValue( 0.0, 0.0, 0.0,  0.0, 0.0, 0.0) },
+    { "left_shoulder_pitch_joint", ControlJointValue( 10000.0, 0.01, 1.0, 14.0,  0.0, 0.0) },
+    { "left_shoulder_roll_joint",  ControlJointValue( 10000.0, 0.01, 1.0, 14.0,  0.0, 0.0) },
+    { "left_shoulder_yaw_joint",   ControlJointValue(  5000.0, 0.0,  1.0,  9.0,  0.0, 0.0) },
+    { "left_elbow_joint",          ControlJointValue(  5000.0, 0.0,  1.0,  9.0,  0.0, 0.0) },
+    { "left_wrist_roll_joint",     ControlJointValue(  500.0,  1.0,  0.1,  5.0,  0.0, 0.0) },
+    { "left_wrist_pitch_joint",    ControlJointValue(  500.0,  1.0,  0.1,  5.0,  0.0, 0.0) },
+    { "left_wrist_yaw_joint",      ControlJointValue(  500.0,  1.0,  0.1,  3.0,  0.0, 0.0) },
+    { "right_shoulder_pitch_joint",ControlJointValue(10000.0, 0.01,  1.0,  0.0,  0.0, 0.0) },
+    { "right_shoulder_roll_joint", ControlJointValue(10000.0, 0.01,  1.0,  0.0,  0.0, 0.0) },
+    { "right_shoulder_yaw_joint",  ControlJointValue( 5000.0,  0.0,  1.0,  0.0,  0.0, 0.0) },
+    { "right_elbow_joint",         ControlJointValue( 5000.0,  0.0,  1.0,  0.0,  0.0, 0.0) },
+    { "right_wrist_roll_joint",    ControlJointValue(  500.0,  1.0,  0.1,  0.0,  0.0, 0.0) },
+    { "right_wrist_pitch_joint",   ControlJointValue(  500.0,  1.0,  0.1,  0.0,  0.0, 0.0) },
+    { "right_wrist_yaw_joint",     ControlJointValue(  500.0,  1.0,  0.1,  0.0,  0.0, 0.0) },
+    { "left_hip_yaw_joint",        ControlJointValue( 5000.0, 20.0,  5.0,  7.0,  0.0, 0.0) },
+    { "left_hip_pitch_joint",      ControlJointValue( 5000.0, 20.0,  5.0, 14.0,  0.0, 0.0) },
+    { "left_hip_roll_joint",       ControlJointValue( 5000.0, 20.0,  5.0, 14.0,  0.0, 0.0) },
+    { "left_knee_joint",           ControlJointValue( 5000.0, 20.0,  5.0, 25.0,  0.0, 0.0) },
+    { "left_ankle_pitch_joint",    ControlJointValue( 5000.0, 20.0,  5.0, 14.0,  0.0, 0.0) },
+    { "left_ankle_roll_joint",     ControlJointValue( 5000.0, 20.0,  5.0,  9.0,  0.0, 0.0) },
+    { "right_hip_yaw_joint",       ControlJointValue( 5000.0, 20.0,  5.0,  7.0,  0.0, 0.0) },
+    { "right_hip_pitch_joint",     ControlJointValue( 5000.0, 20.0,  5.0, 14.0,  0.0, 0.0) },
+    { "right_hip_roll_joint",      ControlJointValue( 5000.0, 20.0,  5.0, 14.0,  0.0, 0.0) },
+    { "right_knee_joint",          ControlJointValue( 5000.0, 20.0,  5.0, 25.0,  0.0, 0.0) },
+    { "right_ankle_pitch_joint",   ControlJointValue( 5000.0, 20.0,  5.0, 14.0,  0.0, 0.0) },
+    { "right_ankle_roll_joint",    ControlJointValue( 5000.0, 20.0,  5.0,  9.0,  0.0, 0.0) },
+    { "torso_joint",               ControlJointValue(10000.0, 20.0,  1.0, 10.0,  0.0, 0.0) },
   };
 
 
@@ -134,7 +134,7 @@ int main(int argc, char **argv)
     a_robot_ctrl_joint_infos = (choice==0) ?
       h1_2_ctrl_joint_infos: talos_ctrl_joint_infos ;
 
-  bool debug_level = false;
+  bool debug_level = true;
 
 
   gz_transport_hw_tools::PerceptionActionLoop a_pal(a_robot_ctrl_joint_infos,

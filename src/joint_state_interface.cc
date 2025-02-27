@@ -3,7 +3,10 @@
 
 #include <gz_gep_tools/joint_state_interface.hh>
 #include <gz/msgs.hh>
+#include <gz/msgs/model.pb.h>
 #include <gz/transport.hh>
+
+#include <gz/msgs/map_named_joints_forces.pb.h>
 
 namespace gz_transport_hw_tools {
 
@@ -118,9 +121,16 @@ JointStateInterface::JointStateInterface(std::string &a_prefix_model_root,
   prefix_world_ = a_prefix_world ;
   joint_state_topic_ =a_prefix_world +  a_prefix_model_root + "joint_state";
 
+  if (debug_level)
+    std::cout << "Subscribe to " << joint_state_topic_ << std::endl;
+
   node_.Subscribe<JointStateInterface,gz::msgs::Model>(joint_state_topic_,
                                                        &JointStateInterface::CallbackJointState,
                                                        this);
+
+  topic_name_gz_pub_named_joints_forces_ = a_prefix_model_root + "joints/cmd_forces";
+  gz_pub_named_joints_forces_ =
+      node_.Advertise<gz::msgs::MapNamedJointsForces>(topic_name_gz_pub_named_joints_forces_);
 }
 
 JointStateInterface::~JointStateInterface() {}
@@ -133,15 +143,11 @@ void JointStateInterface::SetListOfJoints(
   for (auto jointItr = rbt_ctrl_joint_infos.begin();
        jointItr != rbt_ctrl_joint_infos.end();
        jointItr++) {
-    /// Build a new string
-    std::string a_new_cmd_force = prefix_model_root_ + std::string("joint/") +
-        jointItr->first + std::string("/cmd_force");
-
     /// Build advertise
-    gz_robot_joints_.dict_joint_values[jointItr->first].gz_pub_cmd_force =
-        node_.Advertise<gz::msgs::Double>(a_new_cmd_force);
-
-    gz_robot_joints_.dict_joint_values[jointItr->first].cmd_force_topic = a_new_cmd_force;
+    GZJointValues & agzjointvalues = gz_robot_joints_.dict_joint_values[jointItr->first];
+    agzjointvalues.pos_mes = 0.0;
+    agzjointvalues.vel_mes = 0.0;
+    agzjointvalues.force_ctrl = 0.0;
 
   }
 
@@ -164,7 +170,7 @@ void JointStateInterface::CallbackJointState(
 
   }
 
-  if (debug_level_)
+  //  if (debug_level_)
   {
     std::cerr << "JointStateInterface::CallbackJointState: time: "
               << " " << gz_robot_joints_.time_sec_
@@ -191,31 +197,24 @@ bool JointStateInterface::SetCmd( const RobotCtrlJointInfos &rbt_ctrl_joint_info
               << std::endl;
     return false;
   }
+
+  gz::msgs::MapNamedJointsForces mnjf_msg;
+  auto ljointsforces = mnjf_msg.mutable_jointsforces();
+
   // Iterate over the cmd map.
   for (auto cmd_it = rbt_ctrl_joint_infos.begin();
        cmd_it != rbt_ctrl_joint_infos.end();
        cmd_it++)
   {
-    gz::msgs::Double msg;
-    msg.set_data(cmd_it->second.Cmd());
 
-    auto it_robot_joint_value = gz_robot_joints_.dict_joint_values.find(cmd_it->first);
-    // If the joint is not found go to the next iteration.
-    if (it_robot_joint_value == gz_robot_joints_.dict_joint_values.end())
-      continue;
+    (*ljointsforces)[cmd_it->first]= cmd_it->second.Cmd();
+  }
 
-    if (!it_robot_joint_value->second.gz_pub_cmd_force.Publish(msg)){
-      std::cerr << "Unable to publish on "
-                << it_robot_joint_value->second.cmd_force_topic
-                << std::endl;
-      continue;
-    }
-    if (debug_level_)
-    {
-      std::cout << " Publish " << cmd_it->second.Cmd() << " on "
-                << gz_robot_joints_.dict_joint_values[cmd_it->first].cmd_force_topic
-                << std::endl;
-    }
+  if (!gz_pub_named_joints_forces_.Publish(mnjf_msg)) {
+       std::cerr << "Unable to publish on "
+                 << topic_name_gz_pub_named_joints_forces_
+                 << std::endl;
+       return false;
   }
   return true;
 }

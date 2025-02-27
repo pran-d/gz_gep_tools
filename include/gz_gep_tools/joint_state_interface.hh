@@ -5,7 +5,7 @@
 #include <memory>
 
 /// GZ includes
-#include <gz/msgs.hh>
+#include <gz/msgs/model.pb.h>
 #include <gz/transport.hh>
 
 namespace gz_transport_hw_tools {
@@ -88,9 +88,6 @@ class GZJointValues {
   double vel_mes;
   /// Control
   double force_ctrl;
-
-  std::string cmd_force_topic;
-  gz::transport::Node::Publisher gz_pub_cmd_force;
 };
 
 
@@ -150,6 +147,9 @@ class JointStateInterface {
   GZRobotJoints gz_robot_joints_;
 
   bool debug_level_;
+
+  std::string topic_name_gz_pub_named_joints_forces_;
+  gz::transport::Node::Publisher gz_pub_named_joints_forces_;
 };
 
 }

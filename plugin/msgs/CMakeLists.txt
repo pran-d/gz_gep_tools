@@ -27,8 +27,12 @@ gz_msgs_generate_messages(
   DEPENDENCIES gz-msgs${GZ_MSGS_VER}::gz-msgs${GZ_MSGS_VER}
 )
 
-# install(TARGETS 
-#          LIBRARY DESTINATION lib
-#          ARCHIVE DESTINATION lib
-#          RUNTIME DESTINATION bin
-# )
+# From gz_msgs_generate.cmake in gz-msgs package
+# TARGET in gz_msgs_generate_messages is translated in a cmake target named
+# ${PROJET_NAME}-${generate_messages_TARGET}
+# which means here ${PROJET_NAME}-msgs
+install(TARGETS ${PROJECT_NAME}-msgs
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+)

@@ -29,7 +29,9 @@ target_include_directories(gz_transport_hw_interface PUBLIC
   $<INSTALL_INTERFACE:include>)
 target_link_libraries(gz_transport_hw_interface
   gz-transport${GZ_TRANSPORT_VER}::core
-  gz-sim${GZ_SIM_VER}::core)
+  gz-sim${GZ_SIM_VER}::core
+  ${PROJECT_NAME}-msgs
+)
 
 
 add_executable(control_loop ./tools/control_loop.cc)

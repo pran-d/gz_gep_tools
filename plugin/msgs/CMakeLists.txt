@@ -9,7 +9,7 @@ set(GZ_MSGS_VER ${gz-msgs10_VERSION_MAJOR})
 
 # Define a variable 'MSGS_PROTOS' listing the .proto files
 set(MSGS_PROTOS
-   ${CMAKE_CURRENT_SOURCE_DIR}/gz/msgs/map_named_joint_forces.proto
+   ${CMAKE_CURRENT_SOURCE_DIR}/gz/msgs/map_named_joints_forces.proto
 )
 
 # Call 'gz_msgs_generate_messages()' to process the .proto files

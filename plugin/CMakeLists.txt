@@ -1,5 +1,3 @@
-add_subdirectory(msgs)
-
 find_package(gz_sim_vendor REQUIRED)
 find_package(gz-sim REQUIRED)
 
@@ -14,10 +12,12 @@ add_library(${gz_gep_tools_plugin}-system SHARED
 target_link_libraries(${gz_gep_tools_plugin}-system PRIVATE
   gz-sim::gz-sim
   gz-plugin::register
-  {$PROJECT_NAME}-msgs
+  ${PROJECT_NAME}-msgs
 )
 
 # Install directories
 install(TARGETS ${gz_gep_tools_plugin}-system
   DESTINATION lib
 )
+
+add_subdirectory(msgs)

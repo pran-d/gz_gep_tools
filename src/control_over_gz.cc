@@ -25,6 +25,9 @@ ControlOverGz::ControlOverGz(std::string &world_prefix, bool debug_level)
   /// State gzsim service
   state_service_gzsim_ = world_prefix+std::string("/state");
 
+  /// Set pose service
+  set_pose_service_gzsim_ = world_prefix + std::string("/set_pose");
+
   std::string gazebo_clock_topic_name;
   gazebo_clock_topic_name = world_prefix + std::string("/clock");
   node_.Subscribe<ControlOverGz,gz::msgs::Clock>(gazebo_clock_topic_name,
@@ -152,7 +155,7 @@ bool ControlOverGz::ReadWorldStateToInitECM()
 void ControlOverGz::DisplayLinkValues()
 {
   auto entities = Robot_ECM_.EntitiesByComponents( gz::sim::components::Link());
-  
+
   for (auto it_entity = entities.begin();
        it_entity != entities.end();
        it_entity++)
@@ -220,6 +223,7 @@ bool ControlOverGz::SendWorldControlStateToInitECM(const RobotCtrlJointInfos &rb
     }
   }
 
+
   /// Create the serialized state.
   req_serialized_state = new gz::msgs::SerializedState();
   ///  Generate the serialized state msg from the ECM.
@@ -231,6 +235,38 @@ bool ControlOverGz::SendWorldControlStateToInitECM(const RobotCtrlJointInfos &rb
   /// by calling the /prefix_world/state/control Gazebo service.
   if (!node_.Request(wrld_ctrl_state_srv_gzsim_,
                      req_world_ctrl_state,
+                     timeout,
+                     rep_bool,
+                     result)) {
+
+    std::cerr << "Unable to send reset request ! timeout "
+              << wrld_ctrl_state_srv_gzsim_ << " "
+              << result
+              << std::endl;
+    result =false;
+  }
+
+  return true;
+}
+
+bool ControlOverGz::SetPose(double x, double y, double z,
+                            double qx, double qy, double qz, double qw)
+{
+  gz::msgs::Pose pose_msg;
+  gz::msgs::Boolean rep_bool;
+  unsigned int timeout = 3000;
+  bool result;
+
+  gz::msgs::Vector3d * aPosition = pose_msg.mutable_position();
+  aPosition->set_x(x); aPosition->set_y(y); aPosition->set_z(z);
+
+  gz::msgs::Quaternion * aQuaternion  = pose_msg.mutable_orientation();
+  aQuaternion->set_x(qx); aQuaternion->set_y(qy); aQuaternion->set_z(qz); aQuaternion->set_w(qw);
+
+  /// Set Robot Pose
+  /// by calling the /prefix_world/set_pose Gazebo service.
+  if (!node_.Request(set_pose_service_gzsim_,
+                     pose_msg,
                      timeout,
                      rep_bool,
                      result)) {

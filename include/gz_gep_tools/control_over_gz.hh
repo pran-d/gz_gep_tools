@@ -6,6 +6,9 @@
 
 /// GZ includes
 #include <gz/msgs.hh>
+#include <gz/msgs/clock.pb.h>
+#include <gz/msgs/world_control.pb.h>
+#include <gz/msgs/world_control_state.pb.h>
 #include <gz/transport.hh>
 
 #include "joint_state_interface.hh"
@@ -36,6 +39,10 @@ class ControlOverGz {
   /// Send World Control state to Init ECM.
   bool SendWorldControlStateToInitECM(const RobotCtrlJointInfos &rbt_ctrl_joint_infos);
 
+  /// Set Pose
+  bool SetPose(double x, double y, double z,
+               double qx, double qy, double qz, double qw);
+
   /// Initialization of the ECM by reading the world control state
   bool ReadWorldStateToInitECM();
 
@@ -44,7 +51,7 @@ class ControlOverGz {
 
   /// Display link values
   void DisplayLinkValues();
-  
+
  protected:
 
 
@@ -63,8 +70,11 @@ class ControlOverGz {
   /// Name of state service
   std::string state_service_gzsim_;
 
-  /// Name of wrold control state service.
+  /// Name of world control state service.
   std::string wrld_ctrl_state_srv_gzsim_;
+
+  /// Name of set pose service.
+  std::string set_pose_service_gzsim_;
 
   /// GZ node
   gz::transport::Node node_;

@@ -157,7 +157,7 @@ void JointStateInterface::CallbackJointState(
     const gz::msgs::Model&a_gz_model_msg
     ) {
 
-  std::lock_guard(gz_robot_joints_.lock_state_access_);
+  auto lock = std::lock_guard{gz_robot_joints_.lock_state_access_};
 
   for (auto jointItr = a_gz_model_msg.joint().begin();
        jointItr != a_gz_model_msg.joint().end();
@@ -229,7 +229,7 @@ bool JointStateInterface::GetPosVel(RobotCtrlJointInfos &rbt_ctrl_joint_infos,
               << std::endl;
       return false;
   }
-  std::lock_guard(gz_robot_joints_.lock_state_access_);
+  auto lock = std::lock_guard{gz_robot_joints_.lock_state_access_};
   time=(double)gz_robot_joints_.time_sec_ + 1e-9*(double)gz_robot_joints_.time_nsec_;
   for (auto ctrl_joint_it = rbt_ctrl_joint_infos.begin();
        ctrl_joint_it != rbt_ctrl_joint_infos.end();

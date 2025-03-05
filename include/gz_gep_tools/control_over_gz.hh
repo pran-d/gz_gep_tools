@@ -37,7 +37,8 @@ class ControlOverGz {
   double GetSimTime();
 
   /// Send World Control state to Init ECM.
-  bool SendWorldControlStateToInitECM(const RobotCtrlJointInfos &rbt_ctrl_joint_infos);
+  bool SendWorldControlStateToInitECM(const RobotCtrlJointInfos &rbt_ctrl_joint_infos,
+                                      std::vector<double> &aPose3d);
 
   /// Set Pose
   bool SetPose(double x, double y, double z,

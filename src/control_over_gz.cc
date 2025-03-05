@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <cstring>
 
+#include <gz/math/Pose3.hh>
 #include <gz/msgs/empty.pb.h>
 #include <gz_gep_tools/control_over_gz.hh>
 #include <gz/msgs.hh>
@@ -11,8 +12,10 @@
 #include <gz/sim/EntityComponentManager.hh>
 #include <gz/sim/components/Joint.hh>
 #include <gz/sim/components/Link.hh>
+#include <gz/sim/components/Model.hh>
 #include <gz/sim/Joint.hh>
 #include <gz/sim/Link.hh>
+#include <gz/sim/Model.hh>
 
 namespace gz_transport_hw_tools {
 
@@ -89,6 +92,11 @@ bool ControlOverGz::Reset()
   req_world_ctrl.set_pause(true);
   /// Set the world reset inside the world control reset.
   req_world_ctrl.set_allocated_reset(req_world_reset);
+  req_world_ctrl.set_multi_step(0);
+  req_world_ctrl.set_step (false);
+  req_world_ctrl.set_pause(true);
+  req_world_ctrl.set_seed(0);
+
   /// Do request.
   bool result;
   if (!node_.Request( control_service_gzsim_, req_world_ctrl, timeout, rep_bool, result)) {
@@ -193,7 +201,8 @@ void ControlOverGz::DisplayJointValues()
   }
 }
 
-bool ControlOverGz::SendWorldControlStateToInitECM(const RobotCtrlJointInfos &rbt_ctrl_joint_infos)
+bool ControlOverGz::SendWorldControlStateToInitECM(const RobotCtrlJointInfos &rbt_ctrl_joint_infos,
+                                                   std::vector<double> &aPose3d)
 {
   gz::msgs::WorldControlState req_world_ctrl_state;
   gz::msgs::SerializedState * req_serialized_state;
@@ -220,6 +229,24 @@ bool ControlOverGz::SendWorldControlStateToInitECM(const RobotCtrlJointInfos &rb
       one_vecd.push_back(a_ctrl_joint_info->second.PosDes());
       //    std::cout << " " << one_vecd[0] << std::endl;
       aJoint.ResetPosition(Robot_ECM_,one_vecd);
+    }
+  }
+
+  auto mentities = Robot_ECM_.EntitiesByComponents( gz::sim::components::Model());
+  for (auto it_Entity = mentities.begin();
+       it_Entity != mentities.end();
+       it_Entity++)
+  {
+    gz::sim::Model aModel(*it_Entity);
+    std::string modelName =  aModel.Name(Robot_ECM_);
+    std::cout << "Model name:" << modelName << std::endl;
+
+    if (modelName=="Pyrene")
+    {
+      gz::math::Pose3d aPose;
+      aPose.Set( aPose3d[0], aPose3d[1], aPose3d[2],
+                 aPose3d[3], aPose3d[4], aPose3d[5]);
+      aModel.SetWorldPoseCmd(Robot_ECM_,aPose);
     }
   }
 

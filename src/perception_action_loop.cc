@@ -30,9 +30,11 @@ namespace gz_transport_hw_tools {
 
 PerceptionActionLoop::PerceptionActionLoop(
     gz_transport_hw_tools::RobotCtrlJointInfos &a_robot_ctrl_joint_infos,
+    std::vector<double> &a_pose3d,
     std::string &a_prefix_model_root, std::string &a_prefix_world,
     bool debug_level)
     : robot_ctrl_joint_infos_(a_robot_ctrl_joint_infos),
+      pose3d_(a_pose3d),
       joint_state_interface_(a_prefix_model_root, a_prefix_world, debug_level),
       control_over_gz_(a_prefix_world, debug_level), debug_level_(debug_level)
       {
@@ -67,11 +69,24 @@ int PerceptionActionLoop::InitGz()
   control_over_gz_.Step();
   control_over_gz_.ReadWorldStateToInitECM();
 
+  while (pre_state_gz_time_==state_gz_time_) {
+    std::this_thread::sleep_for(std::chrono::nanoseconds(2ms));
+    state_gz_time_=control_over_gz_.GetSimTime();
+  }
   // Second reset to set the robot state to a specific position.
+  state_gz_time_=0.0;
+  pre_state_gz_time_=control_over_gz_.GetSimTime();
   if (!control_over_gz_.Reset())  {
     std::cerr << "Reset failed" << std::endl;
   }
-  control_over_gz_.SendWorldControlStateToInitECM(robot_ctrl_joint_infos_);
+
+  while (pre_state_gz_time_==state_gz_time_) {
+    std::this_thread::sleep_for(std::chrono::nanoseconds(2ms));
+    state_gz_time_=control_over_gz_.GetSimTime();
+  }
+
+  control_over_gz_.SendWorldControlStateToInitECM(robot_ctrl_joint_infos_,
+                                                  pose3d_);
   if (debug_level_)
     control_over_gz_.DisplayLinkValues();
   control_over_gz_.Step();

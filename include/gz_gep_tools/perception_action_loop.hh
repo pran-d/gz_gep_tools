@@ -10,6 +10,7 @@ class PerceptionActionLoop {
  public:
   // Default constructore
   PerceptionActionLoop(gz_transport_hw_tools::RobotCtrlJointInfos & a_robot_ctrl_joint_infos,
+                       std::vector<double> & a_pose3d,
                        std::string & a_prefix_model_root,
                        std::string & a_prefix_world,
                        bool debug_level);
@@ -19,11 +20,11 @@ class PerceptionActionLoop {
 
   /// Main loop
   int MainLoop();
-  
+
  protected:
   /// Information for control
   gz_transport_hw_tools::RobotCtrlJointInfos & robot_ctrl_joint_infos_;
-  
+
   /// Informmation from perception and the simulator
   gz_transport_hw_tools::JointStateInterface joint_state_interface_;
 
@@ -34,6 +35,9 @@ class PerceptionActionLoop {
   double state_gz_time_;
   double pre_state_gz_time_;
   unsigned long long int local_time_;
+
+  /// Pose3d when starting
+  std::vector<double> pose3d_;
 
   /// Debug level
   bool debug_level_;

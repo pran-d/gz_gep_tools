@@ -170,7 +170,7 @@ void JointStateInterface::CallbackJointState(
 
   }
 
-  //  if (debug_level_)
+  if (debug_level_)
   {
     std::cerr << "JointStateInterface::CallbackJointState: time: "
               << " " << gz_robot_joints_.time_sec_

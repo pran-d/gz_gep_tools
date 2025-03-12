@@ -88,7 +88,8 @@ bool SaveCmd(const RobotCtrlJointInfos &a_rbt_ctrl_joint_infos,
   for(auto it_joint_info = a_rbt_ctrl_joint_infos.begin();
       it_joint_info != a_rbt_ctrl_joint_infos.end();
       it_joint_info++)
-    ofs_position_robot << it_joint_info->second.Cmd() << " ";
+    ofs_position_robot << it_joint_info->second.Cmd() << " "
+                       << it_joint_info->second.ForceMes() << " ";
   ofs_position_robot << std::endl;
   ofs_position_robot.close();
   return true;
@@ -97,12 +98,12 @@ bool SaveCmd(const RobotCtrlJointInfos &a_rbt_ctrl_joint_infos,
 bool SaveListOfNamedJoints(const RobotCtrlJointInfos &a_rbt_ctrl_joint_infos,
                            const std::string &afilename)
 {
-  std::ofstream ofs_position_robot(afilename.c_str(), std::ios::app);
+  std::ofstream ofs_position_robot(afilename.c_str());
+  unsigned int idx=1;
   for(auto it_joint_info = a_rbt_ctrl_joint_infos.begin();
       it_joint_info != a_rbt_ctrl_joint_infos.end();
       it_joint_info++)
-    ofs_position_robot << it_joint_info->first << " ";
-  ofs_position_robot << std::endl;
+    ofs_position_robot << idx++ << " - " << it_joint_info->first << " " << std::endl;
   ofs_position_robot.close();
   return true;
 }
@@ -167,6 +168,7 @@ void JointStateInterface::CallbackJointState(
 
     gz_robot_joints_.dict_joint_values[jointItr->name()].pos_mes = axis1.position();
     gz_robot_joints_.dict_joint_values[jointItr->name()].vel_mes = axis1.velocity();
+    gz_robot_joints_.dict_joint_values[jointItr->name()].force_mes = axis1.force();
 
   }
 

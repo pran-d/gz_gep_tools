@@ -36,11 +36,13 @@ class ControlJointValue {
   double Cmd() const { return cmd_;}
   double PosMes() const { return pos_mes_;}
   double VelMes() const { return vel_mes_;}
+  double ForceMes() const { return force_mes_;}
   double PosDes() const { return pos_des_;}
   double VelDes() const { return vel_des_;}
 
   void SetPosMes(double &pos_mes) { pos_mes_ = pos_mes;}
   void SetVelMes(double &vel_mes) { vel_mes_ = vel_mes;}
+  void SetForceMes(double &force_mes) { force_mes_ = force_mes;}
 
   void ComputeCmd();
 
@@ -54,9 +56,9 @@ class ControlJointValue {
 
   // Clamping i value to i_clamp
   double i_clamp_;
-  
+
   // Measured quantities
-  double pos_mes_, vel_mes_;
+  double pos_mes_, vel_mes_, force_mes_;
 
   /// Command
   double cmd_;
@@ -80,12 +82,13 @@ bool SaveListOfNamedJoints(const RobotCtrlJointInfos &a_rbt_ctrl_joint_infos,
                            const std::string &afilename);
 
 /// Intermediate structure used to read information from Gazebo "joint_name/joint_state" topic.
-/// 
+///
 class GZJointValues {
  public:
   /// Measured quantities
   double pos_mes;
   double vel_mes;
+  double force_mes;
   /// Control
   double force_ctrl;
 };

@@ -1,3 +1,4 @@
+
 #include <string>
 
 #include "gz_gep_tools/joint_state_interface.hh"
@@ -19,7 +20,7 @@ class PerceptionActionLoop {
   int InitGz();
 
   /// Main loop
-  int MainLoop();
+  int MainLoop(unsigned long long int &);
 
  protected:
   /// Information for control
@@ -31,9 +32,15 @@ class PerceptionActionLoop {
   /// Informmation from perception and the simulator
   gz_transport_hw_tools::ControlOverGz control_over_gz_;
 
-  /// Time related variables
+  /// Time related to state variables
   double state_gz_time_;
   double pre_state_gz_time_;
+
+  /// Time related to gz status
+  double gz_time_;
+  double pre_gz_time_;
+
+  /// Local counter
   unsigned long long int local_time_;
 
   /// Pose3d when starting

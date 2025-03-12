@@ -34,9 +34,15 @@ PerceptionActionLoop::PerceptionActionLoop(
     std::string &a_prefix_model_root, std::string &a_prefix_world,
     bool debug_level)
     : robot_ctrl_joint_infos_(a_robot_ctrl_joint_infos),
-      pose3d_(a_pose3d),
       joint_state_interface_(a_prefix_model_root, a_prefix_world, debug_level),
-      control_over_gz_(a_prefix_world, debug_level), debug_level_(debug_level)
+      control_over_gz_(a_prefix_world, debug_level),
+      state_gz_time_(0.0),
+      pre_state_gz_time_(0.0),
+      gz_time_(0.0),
+      pre_gz_time_(0.0),
+      local_time_(0),
+      pose3d_(a_pose3d),
+      debug_level_(debug_level)
       {
 
   joint_state_interface_.SetListOfJoints(a_robot_ctrl_joint_infos);
@@ -59,8 +65,8 @@ int PerceptionActionLoop::InitGz()
   if (!control_over_gz_.Reset())  {
     std::cerr << "Reset failed" << std::endl;
   }
-  state_gz_time_=0.0;
-  pre_state_gz_time_=control_over_gz_.GetSimTime();
+  gz_time_=0.0;
+  pre_gz_time_=control_over_gz_.GetSimTime();
 
   using namespace std::chrono_literals;
   // Wait 1 ms to perform reset.
@@ -69,20 +75,20 @@ int PerceptionActionLoop::InitGz()
   control_over_gz_.Step();
   control_over_gz_.ReadWorldStateToInitECM();
 
-  while (pre_state_gz_time_==state_gz_time_) {
+  while (pre_gz_time_==gz_time_) {
     std::this_thread::sleep_for(std::chrono::nanoseconds(2ms));
-    state_gz_time_=control_over_gz_.GetSimTime();
+    gz_time_=control_over_gz_.GetSimTime();
   }
   // Second reset to set the robot state to a specific position.
-  state_gz_time_=0.0;
-  pre_state_gz_time_=control_over_gz_.GetSimTime();
+  gz_time_=0.0;
+  pre_gz_time_=control_over_gz_.GetSimTime();
   if (!control_over_gz_.Reset())  {
     std::cerr << "Reset failed" << std::endl;
   }
 
-  while (pre_state_gz_time_==state_gz_time_) {
+  while (pre_gz_time_== gz_time_) {
     std::this_thread::sleep_for(std::chrono::nanoseconds(2ms));
-    state_gz_time_=control_over_gz_.GetSimTime();
+    gz_time_=control_over_gz_.GetSimTime();
   }
 
   control_over_gz_.SendWorldControlStateToInitECM(robot_ctrl_joint_infos_,
@@ -93,11 +99,11 @@ int PerceptionActionLoop::InitGz()
 
   /// Synchronize simulation wait for starting.
   unsigned long int i=0;
-  while(std::isnan(pre_state_gz_time_) ||
-         (pre_state_gz_time_>0.001))
-  { ///  Wait (1ms)
+  while(std::isnan(pre_gz_time_) ||
+         (pre_gz_time_>0.001))
+  { ///  Wait (2ms)
     std::this_thread::sleep_for(std::chrono::nanoseconds(2ms));
-    pre_state_gz_time_=control_over_gz_.GetSimTime();
+    pre_gz_time_=control_over_gz_.GetSimTime();
     if ((i%10==0) && (i>1)){
       control_over_gz_.Reset();
       //  std::this_thread::sleep_for(std::chrono::nanoseconds(2ms));
@@ -106,7 +112,7 @@ int PerceptionActionLoop::InitGz()
       if (i>100) {
         std::cerr << "control_loop stuck in the waiting loop for starting."
                   << std::endl
-                  << pre_state_gz_time_ << " "
+                  << pre_gz_time_ << " "
                   << i << " "
                   << std::endl;
         return -1;
@@ -117,7 +123,7 @@ int PerceptionActionLoop::InitGz()
   return 0;
 }
 
-int PerceptionActionLoop::MainLoop()
+int PerceptionActionLoop::MainLoop(unsigned long long int &duration)
 {
   unsigned long int internal_timer = 0;
   std::string filename_pos("/tmp/position.dat");
@@ -133,23 +139,34 @@ int PerceptionActionLoop::MainLoop()
   /// CTRL-C loop
   while (!g_terminatePub)
   {
-    /// Sense
-    bool is_sim_ready = joint_state_interface_.GetPosVel(robot_ctrl_joint_infos_,
-                                                         state_gz_time_);
+    /// Check if Gazebo time has been updated.
+    gz_time_ = control_over_gz_.GetSimTime();
+
+    /// By default sim is not ready
+    bool is_sim_ready = false;
+
+    /// Test if the simulator clock has been updated.
+    if (pre_gz_time_ < gz_time_)
+      /// Sense
+      is_sim_ready = joint_state_interface_.GetPosVel(robot_ctrl_joint_infos_,
+                                                           state_gz_time_);
 
 
     if (debug_level_)
       std::cerr << "control_loop: "
                 << is_sim_ready << " "
+                << pre_gz_time_<< " "
+                << gz_time_ << " "
                 << pre_state_gz_time_<< " "
                 << state_gz_time_ << " "
                 << internal_timer
                 << std::endl;
     if ((is_sim_ready) && // If the simulation is ready
-        (pre_state_gz_time_<state_gz_time_) && // If the pre_state_gz_time_ is before state_gz_time_
-        (fabs(pre_state_gz_time_-state_gz_time_) < 0.005) // The update of state_gz_time_ might happen before
-        // reset and then putting state_gz_time_ to far ahead.
-        ) {
+        (pre_gz_time_<gz_time_) && // If the pre_gz_time_ is before gz_time_
+        (fabs(pre_gz_time_-gz_time_) < 0.005) // The update of gz_time_ might happen before
+        // reset and then putting gz_time_ to far ahead.
+        )
+    {
 
       {
         /// Control computation.
@@ -162,14 +179,17 @@ int PerceptionActionLoop::MainLoop()
       }
 
       /// Store Gazebo time
-      pre_state_gz_time_ = state_gz_time_;
+      pre_gz_time_ = gz_time_;
 
 
       if (joint_state_interface_.SetCmd(robot_ctrl_joint_infos_))
       {
-        SavePos(robot_ctrl_joint_infos_,filename_pos);
-        SavePosDes(robot_ctrl_joint_infos_,filename_pos_des);
-        SaveCmd(robot_ctrl_joint_infos_,filename_cmd);
+        if (false)
+        {
+          SavePos(robot_ctrl_joint_infos_,filename_pos);
+          SavePosDes(robot_ctrl_joint_infos_,filename_pos_des);
+          SaveCmd(robot_ctrl_joint_infos_,filename_cmd);
+        }
       }
 
       // Start simulation.
@@ -180,14 +200,14 @@ int PerceptionActionLoop::MainLoop()
 
       internal_timer=0;
       /// Stop after 0.2 seconds.
-      if (local_time_>2000)
+      if (local_time_>duration)
         break;
     } else
     {
 
       // We have missed the Step for one sec.
       if ((internal_timer>=1000) &&
-          (pre_state_gz_time_>=state_gz_time_))
+          (pre_gz_time_>=gz_time_))
       {
         std::cerr << "internal_timer: " << internal_timer << std::endl;
         control_over_gz_.Step();
@@ -197,7 +217,10 @@ int PerceptionActionLoop::MainLoop()
 
     }
     using namespace std::chrono_literals;
-    std::this_thread::sleep_for(1ms);
+    std::this_thread::sleep_for(2ms);
+    if ((local_time_%1000==0) && (internal_timer==0))
+      std::cout << "local_time:" << ((long double)local_time_)/1000.0 << " s " << std::endl
+                << " internal_timer:" << internal_timer << std::endl;
     internal_timer++;
   }
   //  aControlOverGz.SendWorldControlState();

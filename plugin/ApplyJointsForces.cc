@@ -26,6 +26,7 @@
 #include <gz/transport/Node.hh>
 
 #include "gz/sim/components/JointForceCmd.hh"
+#include "gz/sim/components/JointPosition.hh"
 #include "gz/sim/components/Name.hh"
 #include "gz/sim/components/Joint.hh"
 #include "gz/sim/components/JointType.hh"
@@ -65,6 +66,11 @@ class ActuatedJoint
 
 class gz::sim::systems::ApplyJointsForcesPrivate
 {
+
+
+ public: ApplyJointsForcesPrivate():
+      cmdForceInitialized(false)
+  {}
 
     /// \brief Get a list of enabled, unique, 1-axis joints of the model. If no
   /// joint names are specified in the plugin configuration, all valid 1-axis
@@ -112,11 +118,13 @@ class gz::sim::systems::ApplyJointsForcesPrivate
     const std::shared_ptr<const sdf::Element> &_sdf,
     const std::string &_parameterName) const;
 
+  /// \brief Make sure that CmdForce has been initialized.
+  bool cmdForceInitialized;
 };
 
 //////////////////////////////////////////////////
 ApplyJointsForces::ApplyJointsForces()
-  : dataPtr(std::make_unique<ApplyJointsForcesPrivate>())
+    : dataPtr(std::make_unique<ApplyJointsForcesPrivate>())
 {
 }
 
@@ -252,27 +260,40 @@ void ApplyJointsForces::PreUpdate(const UpdateInfo &_info,
     //! [findJoint]
 
     if (an_actuated_joint->second.entity == kNullEntity)
+    {
+      gzwarn << "Did not find " << an_actuated_joint->first
+             << " in ECM" << std::endl;
       continue;
-
+    }
 
     // Update joint force
     //! [jointForceComponent]
     auto force = _ecm.Component<components::JointForceCmd>(
         an_actuated_joint->second.entity);
     //! [jointForceComponent]
+    //! [jointPositionComponent]
+    auto position = _ecm.Component<components::JointPosition>(
+        an_actuated_joint->second.entity);
+    //! [jointPositionComponent]
 
     std::lock_guard<std::mutex> lock(this->dataPtr->jointForceCmdMutex);
+
+    double force_to_apply;
+    if (!this->dataPtr->cmdForceInitialized)
+      force_to_apply = 0.0;
+    else
+      force_to_apply = an_actuated_joint->second.jointForceCmd;
 
     //! [modifyComponent]
     if (force == nullptr)
     {
       _ecm.CreateComponent(
           an_actuated_joint->second.entity,
-          components::JointForceCmd({an_actuated_joint->second.jointForceCmd}));
+          components::JointForceCmd({force_to_apply}));
     }
     else
     {
-      force->Data()[0] = an_actuated_joint->second.jointForceCmd;
+      force->Data()[0] += force_to_apply;
     }
   }
     //! [modifyComponent]
@@ -283,6 +304,7 @@ void ApplyJointsForces::PreUpdate(const UpdateInfo &_info,
 void ApplyJointsForcesPrivate::CallbackCmdForce(
     const gz::msgs::MapNamedJointsForces &mnjf_msg)
 {
+  cmdForceInitialized = true;
   std::lock_guard<std::mutex> lock(this->jointForceCmdMutex);
   for ( auto mnjf_it =  mnjf_msg.jointsforces().begin();
         mnjf_it !=  mnjf_msg.jointsforces().end();
@@ -368,7 +390,7 @@ std::vector<Entity> ApplyJointsForcesPrivate::GetEnabledJoints(
       }
       case sdf::JointType::FIXED:
       {
-        gzdbg << "[ApplyJointsForces] Fixed joint [" << jointName
+        gzdbog << "[ApplyJointsForces] Fixed joint [" << jointName
                << "(Entity=" << jointEntity << ")] is skipped.\n";
         continue;
       }

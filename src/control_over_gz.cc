@@ -241,7 +241,7 @@ bool ControlOverGz::SendWorldControlStateToInitECM(const RobotCtrlJointInfos &rb
     std::string modelName =  aModel.Name(Robot_ECM_);
     std::cout << "Model name:" << modelName << std::endl;
 
-    if (modelName=="Pyrene")
+    if ((modelName=="Pyrene") || modelName=="H1")
     {
       gz::math::Pose3d aPose;
       aPose.Set( aPose3d[0], aPose3d[1], aPose3d[2],

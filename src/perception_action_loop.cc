@@ -184,7 +184,7 @@ int PerceptionActionLoop::MainLoop(unsigned long long int &duration)
 
       if (joint_state_interface_.SetCmd(robot_ctrl_joint_infos_))
       {
-        if (false)
+        if (true)
         {
           SavePos(robot_ctrl_joint_infos_,filename_pos);
           SavePosDes(robot_ctrl_joint_infos_,filename_pos_des);

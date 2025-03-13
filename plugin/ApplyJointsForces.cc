@@ -271,10 +271,6 @@ void ApplyJointsForces::PreUpdate(const UpdateInfo &_info,
     auto force = _ecm.Component<components::JointForceCmd>(
         an_actuated_joint->second.entity);
     //! [jointForceComponent]
-    //! [jointPositionComponent]
-    auto position = _ecm.Component<components::JointPosition>(
-        an_actuated_joint->second.entity);
-    //! [jointPositionComponent]
 
     std::lock_guard<std::mutex> lock(this->dataPtr->jointForceCmdMutex);
 
@@ -390,7 +386,7 @@ std::vector<Entity> ApplyJointsForcesPrivate::GetEnabledJoints(
       }
       case sdf::JointType::FIXED:
       {
-        gzdbog << "[ApplyJointsForces] Fixed joint [" << jointName
+        gzdbg << "[ApplyJointsForces] Fixed joint [" << jointName
                << "(Entity=" << jointEntity << ")] is skipped.\n";
         continue;
       }

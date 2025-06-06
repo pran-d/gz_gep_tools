@@ -7,6 +7,7 @@ namespace gz_transport_hw_tools
 
 /// Data related to TALOS
 extern RobotCtrlJointInfos talos_ctrl_joint_infos;
+extern RobotCtrlJointInfos talos_ctrl_joint_infos_grasp;
 extern std::vector<double> talos_pose3d;
 
 /// Data related to H1_v2 full model

@@ -245,54 +245,57 @@ void ApplyJointsForces::PreUpdate(const UpdateInfo &_info,
   }
 
 
-  // Iterator over all the actuated joints
-  for (auto an_actuated_joint = this->dataPtr->actuatedJoints.begin();
-       an_actuated_joint != this->dataPtr->actuatedJoints.end();
-       an_actuated_joint++)
+  if (!_info.paused)
   {
-    // If the joint hasn't been identified yet, look for it
-    //! [findJoint]
-    if (an_actuated_joint->second.entity == kNullEntity)
+
+    // Iterator over all the actuated joints
+    for (auto an_actuated_joint = this->dataPtr->actuatedJoints.begin();
+         an_actuated_joint != this->dataPtr->actuatedJoints.end();
+         an_actuated_joint++)
     {
-      an_actuated_joint->second.entity =
+      // If the joint hasn't been identified yet, look for it
+      //! [findJoint]
+      if (an_actuated_joint->second.entity == kNullEntity)
+      {
+        an_actuated_joint->second.entity =
           this->dataPtr->model.JointByName(_ecm, an_actuated_joint->first);
-    }
-    //! [findJoint]
+      }
+      //! [findJoint]
 
-    if (an_actuated_joint->second.entity == kNullEntity)
-    {
-      gzwarn << "Did not find " << an_actuated_joint->first
-             << " in ECM" << std::endl;
-      continue;
-    }
+      if (an_actuated_joint->second.entity == kNullEntity)
+      {
+        gzwarn << "Did not find " << an_actuated_joint->first << " in ECM" << std::endl;
+        continue;
+      }
 
-    // Update joint force
-    //! [jointForceComponent]
-    auto force = _ecm.Component<components::JointForceCmd>(
-        an_actuated_joint->second.entity);
-    //! [jointForceComponent]
+      // Update joint force
+      //! [jointForceComponent]
+      auto force = _ecm.Component<components::JointForceCmd>(an_actuated_joint->second.entity);
+      //! [jointForceComponent]
 
-    std::lock_guard<std::mutex> lock(this->dataPtr->jointForceCmdMutex);
+      std::lock_guard<std::mutex> lock(this->dataPtr->jointForceCmdMutex);
 
-    double force_to_apply;
-    if (!this->dataPtr->cmdForceInitialized)
-      force_to_apply = 0.0;
-    else
-      force_to_apply = an_actuated_joint->second.jointForceCmd;
+      double force_to_apply;
+      if (!this->dataPtr->cmdForceInitialized)
+        force_to_apply = 0.0;
+      else
+        force_to_apply = an_actuated_joint->second.jointForceCmd;
 
-    //! [modifyComponent]
-    if (force == nullptr)
-    {
-      _ecm.CreateComponent(
-          an_actuated_joint->second.entity,
-          components::JointForceCmd({force_to_apply}));
-    }
-    else
-    {
-      force->Data()[0] += force_to_apply;
+      gzmsg << "force_to_apply: " << force_to_apply << " | " << this->dataPtr->cmdForceInitialized
+            << std::endl;
+
+      //! [modifyComponent]
+      if (force == nullptr)
+      {
+        _ecm.CreateComponent(
+          an_actuated_joint->second.entity, components::JointForceCmd({force_to_apply}));
+      }
+      else
+      {
+        force->Data()[0] += force_to_apply;
+      } //! [modifyComponent]
     }
   }
-    //! [modifyComponent]
 }
 
 //////////////////////////////////////////////////
@@ -300,6 +303,8 @@ void ApplyJointsForces::PreUpdate(const UpdateInfo &_info,
 void ApplyJointsForcesPrivate::CallbackCmdForce(
     const gz::msgs::MapNamedJointsForces &mnjf_msg)
 {
+  gzmsg << "Went through CallbackCmdForce " << std::endl;
+
   cmdForceInitialized = true;
   std::lock_guard<std::mutex> lock(this->jointForceCmdMutex);
   for ( auto mnjf_it =  mnjf_msg.jointsforces().begin();

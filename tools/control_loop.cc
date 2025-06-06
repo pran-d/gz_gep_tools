@@ -74,7 +74,7 @@ int main(int argc, char **argv)
       a_prefix_model_root = gz_transport_hw_tools::talos_prefix_model_root;
       a_prefix_world = gz_transport_hw_tools::talos_prefix_world;
       a_pose3d = gz_transport_hw_tools::talos_pose3d;
-      a_robot_ctrl_joint_infos = gz_transport_hw_tools::talos_ctrl_joint_infos ;
+      a_robot_ctrl_joint_infos = gz_transport_hw_tools::talos_ctrl_joint_infos_grasp ;
       break;
   }
 

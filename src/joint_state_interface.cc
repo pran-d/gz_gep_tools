@@ -130,6 +130,7 @@ JointStateInterface::JointStateInterface(std::string &a_prefix_model_root,
                                                        this);
 
   topic_name_gz_pub_named_joints_forces_ = a_prefix_model_root + "joints/cmd_forces";
+  std::cout << "Publish on " << topic_name_gz_pub_named_joints_forces_ << std::endl;
   gz_pub_named_joints_forces_ =
       node_.Advertise<gz::msgs::MapNamedJointsForces>(topic_name_gz_pub_named_joints_forces_);
 }
@@ -190,6 +191,7 @@ void JointStateInterface::CallbackJointState(
 
 bool JointStateInterface::SetCmd( const RobotCtrlJointInfos &rbt_ctrl_joint_infos)
 {
+  std::cout << "SetCmd" << std::endl;
   if (rbt_ctrl_joint_infos.size()>gz_robot_joints_.dict_joint_values.size())
   {
     std::cerr << "rbt_ctrl_joint_infos.size(): "
@@ -210,8 +212,8 @@ bool JointStateInterface::SetCmd( const RobotCtrlJointInfos &rbt_ctrl_joint_info
   {
 
     (*ljointsforces)[cmd_it->first]= cmd_it->second.Cmd();
-  }
 
+  }
   if (!gz_pub_named_joints_forces_.Publish(mnjf_msg)) {
        std::cerr << "Unable to publish on "
                  << topic_name_gz_pub_named_joints_forces_

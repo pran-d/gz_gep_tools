@@ -34,7 +34,6 @@ class PerceptionActionLoop {
 
   /// Time related to state variables
   double state_gz_time_;
-  double pre_state_gz_time_;
 
   /// Time related to gz status
   double gz_time_;

@@ -36,6 +36,42 @@ RobotCtrlJointInfos talos_ctrl_joint_infos {
     { "torso_1_joint",     ControlJointValue( 10000.0,10.0,  1.0,  10.0, 0.0,      0.0)},
     { "torso_2_joint",     ControlJointValue( 10000.0,10.0,  1.0,  10.0, 0.0,      0.0)}
   };
+
+RobotCtrlJointInfos talos_ctrl_joint_infos_grasp {
+    { "arm_left_1_joint",    ControlJointValue(  10000.0, 0.01, 1.0, 14.0, -0.75847 ,  0.0)},
+    { "arm_left_2_joint",    ControlJointValue(  10000.0, 0.01, 1.0, 14.0,  0.173046,  0.0)},
+    { "arm_left_3_joint",    ControlJointValue(   5000.0, 0.0 , 1.0,  9.0,  0.2502  , 0.0)},
+    { "arm_left_4_joint",    ControlJointValue(   5000.0, 0.0 , 1.0,  9.0, -1.725366, 0.0)},
+    { "arm_left_5_joint",    ControlJointValue(    500.0, 1.0 , 0.1,  5.0,  0.6,      0.0)},
+    { "arm_left_6_joint",    ControlJointValue(    500.0, 1.0 , 0.1,  5.0,  0.9,      0.0)},
+    { "arm_left_7_joint",    ControlJointValue(    100.0, 1.0 , 0.0,  3.0,  0.0,      0.0)},
+    { "arm_right_1_joint",   ControlJointValue(  10000.0, 0.01, 1.0, 14.0,  0.75847 , 0.0)},
+    { "arm_right_2_joint",   ControlJointValue(  10000.0, 0.01, 1.0, 14.0, -0.173046, 0.0)},
+    { "arm_right_3_joint",   ControlJointValue(   5000.0, 0.0 , 1.0,  9.0, -0.2502  , 0.0)},
+    { "arm_right_4_joint",   ControlJointValue(   5000.0, 0.0 , 1.0,  9.0, -1.725366, 0.0)},
+    { "arm_right_5_joint",   ControlJointValue(    500.0, 1.0 , 0.1,  5.0, -0.6,      0.0)},
+    { "arm_right_6_joint",   ControlJointValue(    500.0, 1.0 , 0.1,  5.0, -0.9,      0.0)},
+    { "arm_right_7_joint",   ControlJointValue(    500.0, 1.0 , 0.1,  5.0,  0.0,      0.0)},
+    { "gripper_left_joint",  ControlJointValue(   1000.0,10.0 , 1.0, 10.0,  0.0,      0.0)},
+    { "gripper_right_joint", ControlJointValue(   1000.0,10.0 , 1.0, 10.0,  0.0,      0.0)},
+    { "head_1_joint",        ControlJointValue(    300.0, 0.1,  1.0,  5.0,  0.0,      0.0)},
+    { "head_2_joint",        ControlJointValue(    300.0, 0.1,  1.0,  1.5,  0.0,      0.0)},
+    { "leg_left_1_joint",    ControlJointValue(   5000.0,20.0,  5.0,   7.0, 0.0,      0.0)},
+    { "leg_left_2_joint",    ControlJointValue(   5000.0,20.0,  5.0,  14.0, 0.0,      0.0)},
+    { "leg_left_3_joint",    ControlJointValue(   5000.0,20.0,  5.0,  14.0,-0.448041, 0.0)},
+    { "leg_left_4_joint",    ControlJointValue(   5000.0,20.0,  5.0,  25.0, 0.896082, 0.0)},
+    { "leg_left_5_joint",    ControlJointValue(   5000.0,20.0,  5.0,  14.0,-0.448041, 0.0)},
+    { "leg_left_6_joint",    ControlJointValue(   5000.0,20.0,  5.0,   9.0, 0.0,      0.0)},
+    { "leg_right_1_joint",   ControlJointValue(   5000.0,20.0,  5.0,   7.0, 0.0,      0.0)},
+    { "leg_right_2_joint",   ControlJointValue(   5000.0,20.0,  5.0,  14.0, 0.0,      0.0)},
+    { "leg_right_3_joint",   ControlJointValue(   5000.0,20.0,  5.0,  14.0,-0.448041, 0.0)},
+    { "leg_right_4_joint",   ControlJointValue(   5000.0,20.0,  5.0,  25.0, 0.896082, 0.0)},
+    { "leg_right_5_joint",   ControlJointValue(   5000.0,20.0,  5.0,   9.0,-0.448041, 0.0)},
+    { "leg_right_6_joint",   ControlJointValue(   5000.0,20.0,  5.0,   7.0, 0.0,      0.0)},
+    { "torso_1_joint",       ControlJointValue(  10000.0,10.0,  1.0,  10.0, 0.0,      0.0)},
+    { "torso_2_joint",       ControlJointValue(  10000.0,10.0,  1.0,  10.0, 0.0,      0.0)}
+  };
+
 std::vector<double> talos_pose3d {0.0 , 0.0, 1.02, 0.0, 0.0, 0.0};
 
 RobotCtrlJointInfos h1_v2_ctrl_joint_infos {

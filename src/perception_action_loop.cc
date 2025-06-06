@@ -37,7 +37,6 @@ PerceptionActionLoop::PerceptionActionLoop(
       joint_state_interface_(a_prefix_model_root, a_prefix_world, debug_level),
       control_over_gz_(a_prefix_world, debug_level),
       state_gz_time_(0.0),
-      pre_state_gz_time_(0.0),
       gz_time_(0.0),
       pre_gz_time_(0.0),
       local_time_(0),
@@ -157,7 +156,6 @@ int PerceptionActionLoop::MainLoop(unsigned long long int &duration)
                 << is_sim_ready << " "
                 << pre_gz_time_<< " "
                 << gz_time_ << " "
-                << pre_state_gz_time_<< " "
                 << state_gz_time_ << " "
                 << internal_timer
                 << std::endl;
@@ -217,10 +215,15 @@ int PerceptionActionLoop::MainLoop(unsigned long long int &duration)
 
     }
     using namespace std::chrono_literals;
-    std::this_thread::sleep_for(2ms);
+    std::this_thread::sleep_for(4ms);
     if ((local_time_%1000==0) && (internal_timer==0))
-      std::cout << "local_time:" << ((long double)local_time_)/1000.0 << " s " << std::endl
-                << " internal_timer:" << internal_timer << std::endl;
+      std:: cout << "control_loop: "
+                 << is_sim_ready << " "
+                 << pre_gz_time_<< " "
+                 << gz_time_ << " "
+                 << state_gz_time_ << " "
+                 << "local_time:" << ((long double)local_time_)/1000.0 << " s " << std::endl
+                 << " internal_timer:" << internal_timer << std::endl;
     internal_timer++;
   }
   //  aControlOverGz.SendWorldControlState();

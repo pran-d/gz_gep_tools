@@ -30,6 +30,7 @@
 
 #include <sdf/Element.hh>
 
+#include <gz/transport/AdvertiseOptions.hh>
 #include <gz/transport/Node.hh>
 
 #include "gz/sim/Conversions.hh"
@@ -126,9 +127,11 @@ void ContactSensorTest::Load(const sdf::ElementPtr &_sdf, const std::string &_to
     this->topic = tmpTopic;
   }
 
-  this->pub = this->node.Advertise<msgs::Contacts>(this->topic);
-  gzmsg << "Contact system publishing on " << this->topic
-        << " (" << this->pub << ") " << std::endl;
+  gz::transport::v13::AdvertiseMessageOptions anAMO;
+  anAMO.SetScope(gz::transport::v13::Scope_t::HOST);
+  this->pub = this->node.Advertise<msgs::Contacts>(this->topic,anAMO);
+  //  gzmsg << "Contact system publishing on " << this->topic
+  //      << " (" << this->pub << ") " << std::endl;
 }
 
 //////////////////////////////////////////////////
@@ -161,13 +164,13 @@ void ContactSensorTest::Publish()
 
 void ContactPrivate::CheckSensors(EntityComponentManager &_ecm)
 {
-  gzmsg << "CheckSensors " << std::endl;
+  //  gzmsg << "CheckSensors " << std::endl;
 
   _ecm.Each<components::ContactSensor>(
       [&](const Entity &_entity,
           const components::ContactSensor *_contact) -> bool
       {
-        gzmsg << "CheckSensors create new " << std::endl;
+        // gzmsg << "CheckSensors create new " << std::endl;
         // Check if the parent entity is a link
         auto *parentEntity = _ecm.Component<components::ParentEntity>(_entity);
         if (nullptr == parentEntity)
@@ -194,9 +197,6 @@ void ContactPrivate::CheckSensors(EntityComponentManager &_ecm)
           auto childEntities = _ecm.ChildrenByComponents(
               parentEntity->Data(), components::Collision(),
               components::Name(collisionName));
-
-          gzmsg << "childEntitites.size():" << childEntities.size()
-                << std::endl;
 
           if (!childEntities.empty())
           {
@@ -228,7 +228,7 @@ void ContactPrivate::CreateSensors(EntityComponentManager &_ecm)
       [&](const Entity &_entity,
           const components::ContactSensor *_contact) -> bool
       {
-        gzmsg << "CreateSensors create new " << std::endl;
+        //        gzmsg << "CreateSensors create new " << std::endl;
         // Check if the parent entity is a link
         auto *parentEntity = _ecm.Component<components::ParentEntity>(_entity);
         if (nullptr == parentEntity)
@@ -364,7 +364,7 @@ void ContactTest::PostUpdate(const UpdateInfo &_info,
     /*    gzmsg << "PostUpdate size of entitySensorMap:"
           << this->dataPtr->entitySensorMap.size()
           << std::endl; */
-    gzmsg << "Publish" << std::endl;
+    gzmsg << "ContactTest::PostUpdate Publish" << std::endl;
     for (auto &it : this->dataPtr->entitySensorMap)
     {
       // Publish sensor data

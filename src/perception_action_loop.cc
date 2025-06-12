@@ -138,6 +138,7 @@ int PerceptionActionLoop::MainLoop(unsigned long long int &duration)
   /// CTRL-C loop
   while (!g_terminatePub)
   {
+    // std::cerr << "Step 1" << std::endl;
     /// Check if Gazebo time has been updated.
     gz_time_ = control_over_gz_.GetSimTime();
 
@@ -150,7 +151,7 @@ int PerceptionActionLoop::MainLoop(unsigned long long int &duration)
       is_sim_ready = joint_state_interface_.GetPosVel(robot_ctrl_joint_infos_,
                                                            state_gz_time_);
 
-
+    // std::cerr << "Step 2" << std::endl;
     if (debug_level_)
       std::cerr << "control_loop: "
                 << is_sim_ready << " "
@@ -161,7 +162,7 @@ int PerceptionActionLoop::MainLoop(unsigned long long int &duration)
                 << std::endl;
     if ((is_sim_ready) && // If the simulation is ready
         (pre_gz_time_<gz_time_) && // If the pre_gz_time_ is before gz_time_
-        (fabs(pre_gz_time_-gz_time_) < 0.005) // The update of gz_time_ might happen before
+        (fabs(state_gz_time_-gz_time_) < 0.005) // The update of gz_time_ might happen before
         // reset and then putting gz_time_ to far ahead.
         )
     {
@@ -178,7 +179,7 @@ int PerceptionActionLoop::MainLoop(unsigned long long int &duration)
 
       /// Store Gazebo time
       pre_gz_time_ = gz_time_;
-
+      // std::cerr << "Step 3" << std::endl;
 
       if (joint_state_interface_.SetCmd(robot_ctrl_joint_infos_))
       {
@@ -190,6 +191,7 @@ int PerceptionActionLoop::MainLoop(unsigned long long int &duration)
         }
       }
 
+      // std::cerr << "Step 4" << std::endl;
       // Start simulation.
       // TODO : Verify that step has converged before returning.
       control_over_gz_.Step();
@@ -202,9 +204,9 @@ int PerceptionActionLoop::MainLoop(unsigned long long int &duration)
         break;
     } else
     {
-
-      // We have missed the Step for one sec.
-      if ((internal_timer>=1000) &&
+      // std::cerr << "Step 5" << std::endl;
+      // We have missed the Step for internal_timer * .
+      if ((internal_timer>=10) &&
           (pre_gz_time_>=gz_time_))
       {
         std::cerr << "internal_timer: " << internal_timer << std::endl;
@@ -214,9 +216,10 @@ int PerceptionActionLoop::MainLoop(unsigned long long int &duration)
       }
 
     }
+    // std::cerr << "Step 6" << std::endl;
     using namespace std::chrono_literals;
-    std::this_thread::sleep_for(4ms);
-    if ((local_time_%1000==0) && (internal_timer==0))
+    std::this_thread::sleep_for(1ms);
+    if (local_time_%20==0)
       std:: cout << "control_loop: "
                  << is_sim_ready << " "
                  << pre_gz_time_<< " "
@@ -225,6 +228,7 @@ int PerceptionActionLoop::MainLoop(unsigned long long int &duration)
                  << "local_time:" << ((long double)local_time_)/1000.0 << " s " << std::endl
                  << " internal_timer:" << internal_timer << std::endl;
     internal_timer++;
+    // std::cerr << "Step 7" << std::endl;
   }
   //  aControlOverGz.SendWorldControlState();
 

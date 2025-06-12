@@ -65,7 +65,7 @@ bool ControlOverGz::Step()
 
   /// Set reset for everything
   req_world_ctrl.set_multi_step(1);
-  req_world_ctrl.set_pause(true);
+  req_world_ctrl.set_pause(false);
 
   /// Do request.
   bool result=true;

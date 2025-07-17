@@ -53,7 +53,7 @@ add_subdirectory(plugin)
 install(TARGETS control_loop
   DESTINATION lib/${PROJECT_NAME})
 
-install(TARGETS gz_transport_hw_interface
+install(TARGETS gz_transport_hw_interface ${PROJECT_NAME}-msgs
   EXPORT export_${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib

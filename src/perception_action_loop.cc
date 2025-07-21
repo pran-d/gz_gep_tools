@@ -71,6 +71,7 @@ int PerceptionActionLoop::InitGz()
   // Wait 1 ms to perform reset.
   //std::this_thread::sleep_for(std::chrono::nanoseconds(1ms));
   // Start simulation.
+  std::cerr << "Start simulation." << std::endl;
   control_over_gz_.Step();
   control_over_gz_.ReadWorldStateToInitECM();
 
@@ -96,29 +97,31 @@ int PerceptionActionLoop::InitGz()
     control_over_gz_.DisplayLinkValues();
   control_over_gz_.Step();
 
+  control_over_gz_.Pause();
+
   /// Synchronize simulation wait for starting.
-  unsigned long int i=0;
-  while(std::isnan(pre_gz_time_) ||
-         (pre_gz_time_>0.001))
-  { ///  Wait (2ms)
-    std::this_thread::sleep_for(std::chrono::nanoseconds(2ms));
-    pre_gz_time_=control_over_gz_.GetSimTime();
-    if ((i%10==0) && (i>1)){
-      control_over_gz_.Reset();
-      //  std::this_thread::sleep_for(std::chrono::nanoseconds(2ms));
-      control_over_gz_.Step();
-      //std::this_thread::sleep_for(std::chrono::nanoseconds(2ms));
-      if (i>100) {
-        std::cerr << "control_loop stuck in the waiting loop for starting."
-                  << std::endl
-                  << pre_gz_time_ << " "
-                  << i << " "
-                  << std::endl;
-        return -1;
-      }
-    }
-    i++;
-  }
+  // unsigned long int i=0;
+  // while(std::isnan(pre_gz_time_) ||
+  //        (pre_gz_time_>0.001))
+  // { ///  Wait (2ms)
+  //   std::this_thread::sleep_for(std::chrono::nanoseconds(2ms));
+  //   pre_gz_time_=control_over_gz_.GetSimTime();
+  //   if ((i%10==0) && (i>1)){
+  //     control_over_gz_.Reset();
+  //     //  std::this_thread::sleep_for(std::chrono::nanoseconds(2ms));
+  //     control_over_gz_.Step();
+  //     //std::this_thread::sleep_for(std::chrono::nanoseconds(2ms));
+  //     if (i>100) {
+  //       std::cerr << "control_loop stuck in the waiting loop for starting."
+  //                 << std::endl
+  //                 << pre_gz_time_ << " "
+  //                 << i << " "
+  //                 << std::endl;
+  //       return -1;
+  //     }
+  //   }
+  //   i++;
+  // }
   return 0;
 }
 

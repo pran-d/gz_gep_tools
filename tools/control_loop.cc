@@ -91,7 +91,7 @@ int main(int argc, char **argv)
   a_pal.InitGz();
 
   unsigned long long int duration= 20000;
-  a_pal.MainLoop(duration);
+  // a_pal.MainLoop(duration);
 
   return 0;
 }

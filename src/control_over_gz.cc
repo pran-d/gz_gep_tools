@@ -82,16 +82,16 @@ bool ControlOverGz::Step()
 bool ControlOverGz::Reset()
 {
   gz::msgs::WorldControl req_world_ctrl;
-  gz::msgs::WorldReset * req_world_reset;
+  // gz::msgs::WorldReset * req_world_reset;
   gz::msgs::Boolean rep_bool;
   unsigned int timeout = 3000;
 
   /// Set reset for everything
-  req_world_reset = new gz::msgs::WorldReset();
-  req_world_reset->set_all(true);
+  // req_world_reset = new gz::msgs::WorldReset();
+  // req_world_reset->set_all(true);
   req_world_ctrl.set_pause(true);
   /// Set the world reset inside the world control reset.
-  req_world_ctrl.set_allocated_reset(req_world_reset);
+  // req_world_ctrl.set_allocated_reset(req_world_reset);
   req_world_ctrl.set_multi_step(0);
   req_world_ctrl.set_step (false);
   req_world_ctrl.set_pause(true);
@@ -241,7 +241,7 @@ bool ControlOverGz::SendWorldControlStateToInitECM(const RobotCtrlJointInfos &rb
     std::string modelName =  aModel.Name(Robot_ECM_);
     std::cout << "Model name:" << modelName << std::endl;
 
-    if ((modelName=="Pyrene") || modelName=="H1")
+    if ((modelName=="talos") || modelName=="H1")
     {
       gz::math::Pose3d aPose;
       aPose.Set( aPose3d[0], aPose3d[1], aPose3d[2],

@@ -52,8 +52,8 @@ RobotCtrlJointInfos talos_ctrl_joint_infos_grasp {
     { "arm_right_5_joint",   ControlJointValue(    500.0, 1.0 , 0.1,  5.0, -0.6,      0.0)},
     { "arm_right_6_joint",   ControlJointValue(    500.0, 1.0 , 0.1,  5.0, -0.9,      0.0)},
     { "arm_right_7_joint",   ControlJointValue(    500.0, 1.0 , 0.1,  5.0,  0.0,      0.0)},
-    { "gripper_left_joint",  ControlJointValue(   1000.0,10.0 , 1.0, 10.0,  0.0,      0.0)},
-    { "gripper_right_joint", ControlJointValue(   1000.0,10.0 , 1.0, 10.0,  0.0,      0.0)},
+    // { "gripper_left_joint",  ControlJointValue(   1000.0,10.0 , 1.0, 10.0,  0.0,      0.0)},
+    // { "gripper_right_joint", ControlJointValue(   1000.0,10.0 , 1.0, 10.0,  0.0,      0.0)},
     { "head_1_joint",        ControlJointValue(    300.0, 0.1,  1.0,  5.0,  0.0,      0.0)},
     { "head_2_joint",        ControlJointValue(    300.0, 0.1,  1.0,  1.5,  0.0,      0.0)},
     { "leg_left_1_joint",    ControlJointValue(   5000.0,20.0,  5.0,   7.0, 0.0,      0.0)},
@@ -172,8 +172,8 @@ RobotCtrlJointInfos h1_v2_woh_ctrl_joint_infos {
   };
 std::vector<double> h1_v2_woh_pose3d {0.0 , 0.0, 1.02, 0.0, 0.0, 0.0};
 
-std::string talos_prefix_model_root("/model/Pyrene/");
-std::string talos_prefix_world("/world/empty_talos_gz");
+std::string talos_prefix_model_root("/model/talos/");
+std::string talos_prefix_world("/world/empty");
 
 std::string h1_v2_prefix_model_root("/model/H1/");
 std::string h1_v2_prefix_world("/world/empty_h1_2_gz");
